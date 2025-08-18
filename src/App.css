@@ -533,12 +533,12 @@ body {
 
 /* AUTH STYLES */
 .auth-container {
-  max-width: 360px;
-  margin: 10vh auto;
-  background: var(--bg-secondary);
-  border-radius: 16px;
+  max-width: 100%;
+  width: 95vw;
+  margin: 8vh auto;
+  border-radius: 12px;
   box-shadow: var(--shadow-lg);
-  overflow: hidden;
+  padding: 0;
   border: 1px solid var(--border-light);
 }
 
