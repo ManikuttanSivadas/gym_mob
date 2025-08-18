@@ -74,10 +74,6 @@ function AuthPage({ onAuthSuccess, theme, onToggleTheme }) {
 
   return (
     <div className="auth-container">
-      <div style={{ position: "absolute", top: "20px", right: "20px" }}>
-        <ThemeToggle theme={theme} onToggleTheme={onToggleTheme} />
-      </div>
-
       <div className="auth-header">
         <h1>Strive</h1>
         <p>
