@@ -1,0 +1,600 @@
+import React, { useState } from "react";
+
+// Dummy exercise templates (import from a constants file in real usage)
+const exerciseTemplates = [
+  { id: "bench-press", name: "Bench Press", category: "Chest" },
+  { id: "squat", name: "Squat", category: "Legs" },
+  { id: "deadlift", name: "Deadlift", category: "Back" },
+  { id: "pull-ups", name: "Pull-ups", category: "Back" },
+  { id: "shoulder-press", name: "Shoulder Press", category: "Shoulders" },
+  { id: "barbell-row", name: "Barbell Row", category: "Back" },
+  { id: "bicep-curls", name: "Bicep Curls", category: "Arms" },
+  { id: "tricep-dips", name: "Tricep Dips", category: "Arms" },
+  { id: "leg-press", name: "Leg Press", category: "Legs" },
+  { id: "lat-pulldown", name: "Lat Pulldown", category: "Back" }
+];
+
+function generateId() {
+  return Date.now().toString() + Math.random().toString(36).substr(2, 9);
+}
+
+// SaveConfirmationModal and SetInput
+function SaveConfirmationModal({ isOpen, onClose, onConfirm, workoutName, selectedDate }) {
+  if (!isOpen) return null;
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-container" onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <h3>Save "{workoutName}"</h3>
+          <p>
+            Save this workout for <strong>{selectedDate}</strong>? Once saved, you cannot edit this workout. Make sure all exercises and sets are correct.
+          </p>
+        </div>
+        <div className="modal-actions">
+          <button className="btn-modal-secondary" onClick={onClose}>
+            Edit More
+          </button>
+          <button className="btn-modal-primary" onClick={onConfirm}>
+            Save Workout
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SetInput({ onAddSet, sets, onRemoveSet }) {
+  const [weight, setWeight] = useState("");
+  const [reps, setReps] = useState("");
+  function handleSubmit() {
+    onAddSet(weight, reps);
+    setWeight("");
+    setReps("");
+  }
+  return (
+    <div>
+      <div className="set-input-form">
+        <input
+          type="number"
+          placeholder="Weight (kg)"
+          value={weight}
+          onChange={e => setWeight(e.target.value)}
+          min={0}
+          step={0.5}
+        />
+        <input
+          type="number"
+          placeholder="Reps"
+          value={reps}
+          onChange={e => setReps(e.target.value)}
+          min={1}
+        />
+        <button className="btn-primary" type="button" onClick={handleSubmit}>
+          Add Set
+        </button>
+      </div>
+      {sets.length > 0 && (
+        <div className="current-sets">
+          <h4>Current Sets</h4>
+          {sets.map((set, idx) => (
+            <div key={set.id} className="set-item">
+              <span>
+                Set {idx + 1} • {set.weight} kg × {set.reps} reps
+              </span>
+              <button className="btn-danger" type="button" onClick={() => onRemoveSet(set.id)}>
+                Remove
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LogWorkoutTab({
+  workoutName,
+  setWorkoutName,
+  workoutExercises,
+  setWorkoutExercises,
+  activeExercise,
+  setActiveExercise,
+  currentSets,
+  setCurrentSets,
+  onAddWorkout
+}) {
+  const [currentStep, setCurrentStep] = useState(1);
+  const [exerciseInput, setExerciseInput] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [editingExercise, setEditingExercise] = useState(null);
+  const [editingSets, setEditingSets] = useState([]);
+  const [editingName, setEditingName] = useState("");
+  const [showSaveModal, setShowSaveModal] = useState(false);
+
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  });
+
+  function getTodayDate() {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  function getMinDate() {
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+    const year = oneYearAgo.getFullYear();
+    const month = String(oneYearAgo.getMonth() + 1).padStart(2, "0");
+    const day = String(oneYearAgo.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  const filteredExercises = exerciseTemplates.filter(
+    ex =>
+      ex.name.toLowerCase().includes(exerciseInput.toLowerCase()) ||
+      ex.category.toLowerCase().includes(exerciseInput.toLowerCase())
+  );
+
+  function handleContinueToStep2() {
+    if (selectedDate > getTodayDate()) {
+      alert("Cannot select a future date. Please select today or a past date.");
+      return;
+    }
+    if (!workoutName.trim()) {
+      alert("Please enter a workout name");
+      return;
+    }
+    setCurrentStep(2);
+  }
+
+  function handleBackToStep1() {
+    setCurrentStep(1);
+    setActiveExercise(null);
+    setCurrentSets([]);
+    setEditingExercise(null);
+    setEditingSets([]);
+    setEditingName("");
+    setExerciseInput("");
+    setShowSuggestions(false);
+  }
+
+  function handleExerciseInputChange(e) {
+    const value = e.target.value;
+    setExerciseInput(value);
+    setShowSuggestions(value.length > 0 && filteredExercises.length > 0);
+  }
+
+  function handleExerciseInputFocus() {
+    if (exerciseInput.length > 0 && filteredExercises.length > 0) {
+      setShowSuggestions(true);
+    }
+  }
+
+  function handleExerciseInputBlur() {
+    setTimeout(() => setShowSuggestions(false), 200);
+  }
+
+  function handleSuggestionClick(exerciseName) {
+    setExerciseInput(exerciseName);
+    setShowSuggestions(false);
+  }
+
+  function handleSelectExercise() {
+    const exerciseName = exerciseInput.trim();
+    if (!exerciseName) {
+      alert("Please enter an exercise name");
+      return;
+    }
+    setActiveExercise({
+      id: generateId(),
+      name: exerciseName,
+      sets: []
+    });
+    setCurrentSets([]);
+    setExerciseInput("");
+    setShowSuggestions(false);
+  }
+
+  function handleAddSet(weight, reps) {
+    if (!weight || !reps) {
+      alert("Please enter both weight and reps");
+      return;
+    }
+    const newSet = {
+      id: generateId(),
+      weight: Number(weight),
+      reps: Number(reps)
+    };
+    if (editingExercise) {
+      setEditingSets([...editingSets, newSet]);
+    } else {
+      setCurrentSets([...currentSets, newSet]);
+    }
+  }
+
+  function handleRemoveSet(setId) {
+    if (editingExercise) {
+      setEditingSets(editingSets.filter(set => set.id !== setId));
+    } else {
+      setCurrentSets(currentSets.filter(set => set.id !== setId));
+    }
+  }
+
+  function handleFinishExercise() {
+    const sets = editingExercise ? editingSets : currentSets;
+    if (sets.length === 0) {
+      alert("Please add at least one set");
+      return;
+    }
+    const exerciseWithSets = {
+      ...(editingExercise || activeExercise),
+      name: editingExercise ? editingName : activeExercise.name,
+      sets: [...sets]
+    };
+    if (editingExercise) {
+      setWorkoutExercises(
+        workoutExercises.map(ex => (ex.id === editingExercise.id ? exerciseWithSets : ex))
+      );
+      setEditingExercise(null);
+      setEditingSets([]);
+      setEditingName("");
+    } else {
+      setWorkoutExercises([...workoutExercises, exerciseWithSets]);
+      setActiveExercise(null);
+      setCurrentSets([]);
+    }
+  }
+
+  function handleCancelExercise() {
+    if (editingExercise) {
+      setEditingExercise(null);
+      setEditingSets([]);
+      setEditingName("");
+    } else {
+      setActiveExercise(null);
+      setCurrentSets([]);
+    }
+  }
+
+  function handleRemoveExercise(exerciseId) {
+    setWorkoutExercises(workoutExercises.filter(ex => ex.id !== exerciseId));
+  }
+
+  function handleEditExercise(exercise) {
+    setEditingExercise(exercise);
+    setEditingSets([...exercise.sets]);
+    setEditingName(exercise.name);
+  }
+
+  function handleSaveWorkout() {
+    if (selectedDate > getTodayDate()) {
+      alert("Cannot save workout for a future date. Please select today or a past date.");
+      return;
+    }
+    if (!workoutName.trim()) {
+      alert("Please enter a workout name");
+      return;
+    }
+    if (workoutExercises.length === 0) {
+      alert("Please add at least one exercise to save workout");
+      return;
+    }
+    setShowSaveModal(true);
+  }
+
+  function handleConfirmSave() {
+    if (selectedDate > getTodayDate()) {
+      alert("Cannot save workout for a future date.");
+      setShowSaveModal(false);
+      return;
+    }
+    const workoutDate = new Date(selectedDate + "T23:59:59");
+    const newWorkout = {
+      id: generateId(),
+      name: workoutName.trim(),
+      date: workoutDate.toISOString(),
+      workoutDate: selectedDate,
+      exercises: [...workoutExercises]
+    };
+    onAddWorkout(newWorkout);
+    setWorkoutName("");
+    setWorkoutExercises([]);
+    setActiveExercise(null);
+    setCurrentSets([]);
+    setSelectedDate(getTodayDate());
+    setCurrentStep(1);
+    setShowSaveModal(false);
+    alert("Workout saved successfully!");
+  }
+
+  function formatSelectedDate(dateStr) {
+    const date = new Date(dateStr + "T12:00:00");
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const selectedParts = dateStr.split("-");
+    const selectedYear = parseInt(selectedParts[0]);
+    const selectedMonth = parseInt(selectedParts[1]);
+    const selectedDay = parseInt(selectedParts);
+    const todayYear = today.getFullYear();
+    const todayMonth = today.getMonth() + 1;
+    const todayDay = today.getDate();
+    const yesterdayYear = yesterday.getFullYear();
+    const yesterdayMonth = yesterday.getMonth() + 1;
+    const yesterdayDay = yesterday.getDate();
+    if (
+      selectedYear === todayYear &&
+      selectedMonth === todayMonth &&
+      selectedDay === todayDay
+    ) {
+      return "Today";
+    } else if (
+      selectedYear === yesterdayYear &&
+      selectedMonth === yesterdayMonth &&
+      selectedDay === yesterdayDay
+    ) {
+      return "Yesterday";
+    } else {
+      return date.toLocaleDateString("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric"
+      });
+    }
+  }
+
+  const currentExercise = editingExercise || activeExercise;
+  const currentExerciseSets = editingExercise ? editingSets : currentSets;
+  const currentExerciseName = editingExercise
+    ? editingName
+    : activeExercise?.name || "";
+
+  return (
+    <div className="tab-section">
+      <div className="workout-step-header">
+        <h2>Log Workout</h2>
+        <div className="step-indicator">
+          <div className={`step-item ${currentStep >= 1 ? "active" : ""}`}>
+            <span className="step-number">1</span>
+            <span className="step-label">Details</span>
+          </div>
+          <div className="step-divider"></div>
+          <div className={`step-item ${currentStep >= 2 ? "active" : ""}`}>
+            <span className="step-number">2</span>
+            <span className="step-label">Exercises</span>
+          </div>
+        </div>
+      </div>
+      {currentStep === 1 && (
+        <div className="step-content">
+          <div className="workout-date-section">
+            <h3>Workout Date</h3>
+            <div className="date-input-container">
+              <div className="date-input-wrapper">
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={e => setSelectedDate(e.target.value)}
+                  max={getTodayDate()}
+                  min={getMinDate()}
+                  className="workout-date-input"
+                  title="Select today or a past date"
+                  aria-label="Select workout date"
+                />
+                <div className="date-input-overlay">
+                  <span className="date-calendar-icon">▦</span>
+                </div>
+              </div>
+              <div className="date-display">
+                <span className="date-text">{formatSelectedDate(selectedDate)}</span>
+                {selectedDate === getTodayDate() && (
+                  <span className="today-badge">Current</span>
+                )}
+              </div>
+              <div className="date-restriction-info">
+                <p>Select today or any past date. Future dates are not available.</p>
+              </div>
+            </div>
+          </div>
+          <div className="workout-name-section">
+            <h3>Workout Name</h3>
+            <input
+              type="text"
+              placeholder="Enter workout name (e.g., Push Day, Leg Day, etc.)"
+              value={workoutName}
+              onChange={e => setWorkoutName(e.target.value)}
+              className="workout-name-input"
+            />
+          </div>
+          <div className="step-actions">
+            <button
+              className="btn-primary continue-btn"
+              onClick={handleContinueToStep2}
+              disabled={!workoutName.trim() || selectedDate > getTodayDate()}
+            >
+              Continue to Exercises
+            </button>
+          </div>
+        </div>
+      )}
+
+      {currentStep === 2 && (
+        <div className="step-content">
+          <div className="step-summary">
+            <div className="summary-item">
+              <span className="summary-label">Date:</span>
+              <span className="summary-value">{formatSelectedDate(selectedDate)}</span>
+            </div>
+            <div className="summary-item">
+              <span className="summary-label">Workout:</span>
+              <span className="summary-value">{workoutName}</span>
+            </div>
+          </div>
+          {!currentExercise && (
+            <div className="exercise-selection">
+              <h3>Select Exercise</h3>
+              <div className="exercise-search-container">
+                <input
+                  type="text"
+                  placeholder="Type exercise name or search suggestions..."
+                  value={exerciseInput}
+                  onChange={handleExerciseInputChange}
+                  onFocus={handleExerciseInputFocus}
+                  onBlur={handleExerciseInputBlur}
+                  className="exercise-search-input"
+                />
+                <button
+                  className="btn-primary exercise-select-btn"
+                  onClick={handleSelectExercise}
+                  disabled={!exerciseInput.trim()}
+                  type="button"
+                >
+                  Select
+                </button>
+                {showSuggestions && filteredExercises.length > 0 && (
+                  <div className="exercise-suggestions">
+                    {filteredExercises.slice(0, 5).map(ex => (
+                      <div
+                        key={ex.id}
+                        className="exercise-suggestion-item"
+                        onClick={() => handleSuggestionClick(ex.name)}
+                      >
+                        <span className="exercise-suggestion-name">{ex.name}</span>
+                        <span className="exercise-suggestion-category">{ex.category}</span>
+                      </div>
+                    ))}
+                    {filteredExercises.length > 5 && (
+                      <div className="exercise-suggestions-more">
+                        +{filteredExercises.length - 5} more available
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {currentExercise && (
+            <div className={editingExercise ? "editing-exercise" : "active-exercise"}>
+              <h3>{editingExercise ? "Edit Exercise" : "Add Sets"}</h3>
+              {editingExercise && (
+                <div style={{ marginBottom: "16px" }}>
+                  <input
+                    type="text"
+                    value={editingName}
+                    onChange={e => setEditingName(e.target.value)}
+                    placeholder="Exercise name"
+                    style={{ width: "100%" }}
+                  />
+                </div>
+              )}
+              <div style={{ marginBottom: "16px", color: "var(--text-muted)", fontSize: "14px" }}>
+                {currentExerciseName}
+              </div>
+              <SetInput
+                onAddSet={handleAddSet}
+                sets={currentExerciseSets}
+                onRemoveSet={handleRemoveSet}
+              />
+              <div style={{ marginTop: "16px", display: "flex", gap: "8px" }}>
+                <button className="btn-success" type="button" onClick={handleFinishExercise}>
+                  {editingExercise ? "Save Changes" : "Complete Exercise"}
+                </button>
+                <button className="btn-secondary" type="button" onClick={handleCancelExercise}>
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          {workoutExercises.length > 0 && (
+            <div className="workout-exercises">
+              <h3>
+                {workoutName} • {workoutExercises.length} exercises
+              </h3>
+              {workoutExercises.map(exercise => (
+                <div key={exercise.id} className="exercise-item">
+                  <h4>
+                    {exercise.name}
+                    <div className="exercise-actions">
+                      <button
+                        className="btn-edit"
+                        type="button"
+                        onClick={() => handleEditExercise(exercise)}
+                        disabled={!!currentExercise}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="btn-danger"
+                        type="button"
+                        onClick={() => handleRemoveExercise(exercise.id)}
+                        disabled={!!currentExercise}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </h4>
+                  <ul className="sets-list">
+                    {exercise.sets.map((set, idx) => (
+                      <li key={set.id}>
+                        Set {idx + 1} • {set.weight} kg × {set.reps} reps
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+              <div className="workout-final-actions">
+                <button
+                  className="btn-success save-workout-btn"
+                  type="button"
+                  onClick={handleSaveWorkout}
+                  disabled={!!currentExercise}
+                >
+                  Save Workout
+                </button>
+                <button
+                  className="btn-secondary back-to-step1-btn"
+                  type="button"
+                  onClick={handleBackToStep1}
+                  disabled={!!currentExercise}
+                >
+                  Back to Details
+                </button>
+              </div>
+            </div>
+          )}
+
+          {workoutExercises.length === 0 && !currentExercise && (
+            <div className="step-actions">
+              <button
+                className="btn-secondary back-to-step1-btn"
+                type="button"
+                onClick={handleBackToStep1}
+              >
+                Back to Details
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      <SaveConfirmationModal
+        isOpen={showSaveModal}
+        workoutName={workoutName}
+        selectedDate={formatSelectedDate(selectedDate)}
+        onClose={() => setShowSaveModal(false)}
+        onConfirm={handleConfirmSave}
+      />
+    </div>
+  );
+}
+
+export default LogWorkoutTab;
