@@ -62,6 +62,19 @@ function App() {
     setIsLoading(false);
   }, []);
 
+  // subscribe to remote workouts when user is present
+  useEffect(() => {
+    if (!user) return;
+    const uid = user.uid || user.username || user.email;
+    if (!uid || typeof AuthService.subscribeToWorkouts !== "function") return;
+    const unsub = AuthService.subscribeToWorkouts(uid, (workoutsFromDb) => {
+      setWorkouts(workoutsFromDb || []);
+    });
+    return () => {
+      if (typeof unsub === "function") unsub();
+    };
+  }, [user]);
+
   // persist current workout state when user changes or workout data changes
   useEffect(() => {
     const key = getUsernameKey(user);

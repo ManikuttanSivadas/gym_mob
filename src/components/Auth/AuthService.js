@@ -1,5 +1,11 @@
 import { auth } from "../../firebase";
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "firebase/auth";
+import { db } from "../../firebase";
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+} from "firebase/auth";
+import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
 
 const mapError = (e) => {
   // keep message simple for UI
@@ -19,6 +25,13 @@ const mapError = (e) => {
       return e.message || e.code;
   }
 };
+
+function storageKeyWorkouts(uid) {
+  return `workouts_${uid}`;
+}
+function storageKeyCurrentWorkout(uid) {
+  return `currentWorkout_${uid}`;
+}
 
 const AuthService = {
   async signup(username, password, email) {
@@ -113,17 +126,131 @@ const AuthService = {
     return null;
   },
 
-  // ensure callers can clear any persisted "current workout" state
-  clearCurrentWorkoutState() {
+  // --- Firestore-backed workout storage (with localStorage fallback) ---
+
+  // Return workouts immediately from localStorage if present, and trigger background sync from Firestore.
+  getUserWorkouts(uid) {
+    if (!uid) return [];
     try {
-      if (typeof localStorage !== "undefined") {
-        localStorage.removeItem("currentWorkout");
-        localStorage.removeItem("currentSets");
+      const raw = localStorage.getItem(storageKeyWorkouts(uid));
+      if (raw) {
+        // start background sync
+        (async () => {
+          try {
+            if (!db) return;
+            const d = await getDoc(doc(db, "users", uid));
+            const remote = (d.exists() && d.data().workouts) ? d.data().workouts : null;
+            if (remote) localStorage.setItem(storageKeyWorkouts(uid), JSON.stringify(remote));
+          } catch (e) { /* ignore background sync errors */ }
+        })();
+        return JSON.parse(raw);
+      }
+    } catch (err) { /* ignore */ }
+
+    // no local cached data — trigger background fetch and return empty
+    (async () => {
+      try {
+        if (!db) return;
+        const d = await getDoc(doc(db, "users", uid));
+        const remote = (d.exists() && d.data().workouts) ? d.data().workouts : [];
+        localStorage.setItem(storageKeyWorkouts(uid), JSON.stringify(remote));
+      } catch (e) { /* ignore */ }
+    })();
+
+    return [];
+  },
+
+  // Persist an array of workouts to Firestore (and localStorage)
+  async saveUserWorkouts(uid, workouts) {
+    if (!uid) return { success: false, error: "Missing user id" };
+    try {
+      try { localStorage.setItem(storageKeyWorkouts(uid), JSON.stringify(workouts)); } catch (e) {}
+      if (db) {
+        await setDoc(doc(db, "users", uid), { workouts }, { merge: true });
       }
       return { success: true };
-    } catch (err) {
-      return { success: false, error: err?.message || "Failed to clear state" };
+    } catch (e) {
+      return { success: false, error: e.message || String(e) };
     }
+  },
+
+  // current workout state (in-progress)
+  getCurrentWorkoutState(uid) {
+    if (!uid) return null;
+    try {
+      const raw = localStorage.getItem(storageKeyCurrentWorkout(uid));
+      if (raw) {
+        // background sync optional
+        (async () => {
+          try {
+            if (!db) return;
+            const d = await getDoc(doc(db, "users", uid));
+            const remote = (d.exists() && d.data().currentWorkout) ? d.data().currentWorkout : null;
+            if (remote) localStorage.setItem(storageKeyCurrentWorkout(uid), JSON.stringify(remote));
+          } catch (e) {}
+        })();
+        return JSON.parse(raw);
+      }
+    } catch (e) {}
+    (async () => {
+      try {
+        if (!db) return;
+        const d = await getDoc(doc(db, "users", uid));
+        const remote = (d.exists() && d.data().currentWorkout) ? d.data().currentWorkout : null;
+        if (remote) localStorage.setItem(storageKeyCurrentWorkout(uid), JSON.stringify(remote));
+      } catch (e) {}
+    })();
+    return null;
+  },
+
+  async saveCurrentWorkoutState(uid, state) {
+    if (!uid) return { success: false, error: "Missing user id" };
+    try {
+      try { localStorage.setItem(storageKeyCurrentWorkout(uid), JSON.stringify(state)); } catch (e) {}
+      if (db) {
+        await setDoc(doc(db, "users", uid), { currentWorkout: state }, { merge: true });
+      }
+      return { success: true };
+    } catch (e) {
+      return { success: false, error: e.message || String(e) };
+    }
+  },
+
+  async clearCurrentWorkoutState(uid) {
+    try {
+      if (uid) {
+        try { localStorage.removeItem(storageKeyCurrentWorkout(uid)); } catch (e) {}
+        if (db) {
+          // clear field by setting to null (merge)
+          await setDoc(doc(db, "users", uid), { currentWorkout: null }, { merge: true });
+        }
+      } else {
+        // clear generic keys
+        try { localStorage.removeItem("currentWorkout"); localStorage.removeItem("currentSets"); } catch (e) {}
+      }
+      return { success: true };
+    } catch (e) {
+      return { success: false, error: e.message || String(e) };
+    }
+  },
+
+  // subscribe to workouts in Firestore; callback receives array of workouts
+  subscribeToWorkouts(uid, cb) {
+    if (!uid || !db || typeof cb !== "function") return () => {};
+    const userDoc = doc(db, "users", uid);
+    const unsub = onSnapshot(
+      userDoc,
+      (snap) => {
+        const remote = snap.exists() && snap.data().workouts ? snap.data().workouts : [];
+        try { localStorage.setItem(storageKeyWorkouts(uid), JSON.stringify(remote)); } catch (e) {}
+        cb(remote);
+      },
+      (err) => {
+        // optional: surface error to console
+        console.error("subscribeToWorkouts error:", err);
+      }
+    );
+    return unsub;
   },
 };
 

@@ -311,7 +311,6 @@ function LogWorkoutTab({
     setSelectedDate(getTodayDate());
     setCurrentStep(1);
     setShowSaveModal(false);
-    alert("Workout saved successfully!");
   }
 
   function formatSelectedDate(dateStr) {
