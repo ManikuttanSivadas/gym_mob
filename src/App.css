@@ -1648,6 +1648,7 @@ button {
 
 .date-filter-input:hover {
   border-color: var(--border-accent);
+  transform: translateY(-1px);
 }
 
 /* Date filter calendar styling */
@@ -2644,6 +2645,25 @@ footer {
   [data-theme="dark"] .theme-toggle:hover .theme-icon::before {
     box-shadow: inset 3px 1px 0 0 #1e2e1e;
   }
+  .app-container {
+    min-height: 100vh;      /* fill viewport */
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Make main content grow to push footer down */
+  .tab-section {
+    flex: 1 1 auto;
+    display: block; /* keep existing layouts inside */
+  }
+
+  /* Footer stays at bottom of app-container */
+  footer {
+    margin-top: auto;
+    position: relative;
+    width: 100%;
+    z-index: 2;
+  }
 }
 
 /* RESPONSIVE UPDATES */
@@ -2839,17 +2859,28 @@ footer {
   }
 
   .history-header {
-    flex-direction: column;
+    flex-direction: row;
     gap: 12px;
-    align-items: stretch;
+    align-items: center;
   }
   
   .history-header h2 {
     margin-bottom: 0;
+    flex: 1;
+    text-align: left;
   }
-  
+
+  .history-controls {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    min-width: 44px;
+  }
+
+  .filter-icon-btn,
   .filter-toggle-btn {
-    width: 100%;
+    width: 44px;
+    padding: 8px;
     justify-content: center;
   }
   
