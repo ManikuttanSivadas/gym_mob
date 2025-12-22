@@ -5,22 +5,26 @@ export default function ProfileDropdown({ user, onLogout, onClose, isOpen }) {
 
   if (!isOpen) return null;
 
+  // safe display values (prevent reading [0] of undefined)
+  const display =
+    (user && (user.name || user.username || user.displayName || user.email)) ||
+    "";
+  const initial = display ? String(display)[0].toUpperCase() : "?";
+  const displayName =
+    (user && (user.name || user.username || user.displayName)) ||
+    "Unknown User";
+  const email = (user && user.email) || "No email";
+
   return (
     <>
       <div className="dropdown-overlay" onClick={onClose} />
       <div className="profile-dropdown">
         {/* Profile Info */}
         <div className="profile-dropdown-header">
-          <div className="profile-dropdown-avatar">
-            {(user.name || user.username)[0].toUpperCase()}
-          </div>
+          <div className="profile-dropdown-avatar">{initial}</div>
           <div className="profile-dropdown-info">
-            <div className="profile-dropdown-name">
-              {user.name || user.username}
-            </div>
-            <div className="profile-dropdown-email">
-              {user.email || "No email"}
-            </div>
+            <div className="profile-dropdown-name">{displayName}</div>
+            <div className="profile-dropdown-email">{email}</div>
           </div>
         </div>
 
@@ -54,7 +58,7 @@ export default function ProfileDropdown({ user, onLogout, onClose, isOpen }) {
             </div>
           )}
         </div>
-         <div className="profile-dropdown-divider" />
+        <div className="profile-dropdown-divider" />
         {/* Sign Out Button */}
         <div className="profile-dropdown-actions">
           <button

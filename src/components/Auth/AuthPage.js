@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import AuthService from './AuthService'; 
-
+import AuthService from "./AuthService";
 
 function ThemeToggle({ theme, onToggleTheme }) {
   return (
@@ -10,59 +9,66 @@ function ThemeToggle({ theme, onToggleTheme }) {
   );
 }
 
-// AuthService should be imported or provided elsewhere in your application:
-// import AuthService from './auth-service';
-
 function AuthPage({ onAuthSuccess, theme, onToggleTheme }) {
   const [isLogin, setIsLogin] = useState(true);
-  const [formData, setFormData] = useState({
-    username: "",
-    password: "",
-    email: "",
-  });
+  const [formData, setFormData] = useState({ username: "", password: "", email: "" });
   const [message, setMessage] = useState("");
   const [isError, setIsError] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   function handleInputChange(e) {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
     setMessage("");
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
+    setMessage("");
+    setIsError(false);
 
     if (!formData.username || !formData.password) {
-      setMessage("Please fill in all required fields");
+      setMessage("Please fill in required fields");
       setIsError(true);
       return;
     }
 
-    let result;
-    if (isLogin) {
-      result = AuthService.login(formData.username, formData.password);
-    } else {
-      if (!formData.email) {
-        setMessage("Email is required for signup");
-        setIsError(true);
-        return;
+    setLoading(true);
+    try {
+      let result;
+      if (isLogin) {
+        // treat username field as email for now
+        result = await AuthService.login(formData.username, formData.password);
+      } else {
+        if (!formData.email) {
+          setMessage("Email is required for signup");
+          setIsError(true);
+          setLoading(false);
+          return;
+        }
+        result = await AuthService.signup(formData.username, formData.password, formData.email);
       }
-      result = AuthService.signup(
-        formData.username,
-        formData.password,
-        formData.email
-      );
-    }
 
-    if (result.success) {
-      setMessage(isLogin ? "Login successful!" : "Account created successfully!");
-      setIsError(false);
-      setTimeout(() => onAuthSuccess(result.user), 1000);
-    } else {
-      setMessage(result.error);
+      console.log("Auth result:", result); // debug log
+
+      if (result && result.success) {
+        setMessage(isLogin ? "Login successful!" : "Account created!");
+        setIsError(false);
+        // call onAuthSuccess immediately (no timeout)
+        if (typeof onAuthSuccess === "function") {
+          onAuthSuccess(result.user);
+        } else {
+          console.warn("onAuthSuccess not provided to AuthPage");
+        }
+      } else {
+        setMessage(result?.error || "Authentication failed");
+        setIsError(true);
+      }
+    } catch (err) {
+      console.error("AuthPage.handleSubmit error:", err);
+      setMessage("Unexpected error");
       setIsError(true);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -76,18 +82,14 @@ function AuthPage({ onAuthSuccess, theme, onToggleTheme }) {
     <div className="auth-container">
       <div className="auth-header">
         <h1>Strive</h1>
-        <p>
-          {isLogin
-            ? "Welcome back to your fitness journey"
-            : "Start your fitness journey today"}
-        </p>
+        <p>{isLogin ? "Welcome back to your fitness journey" : "Start your fitness journey today"}</p>
       </div>
 
       <form className="auth-form" onSubmit={handleSubmit}>
         <input
           type="text"
           name="username"
-          placeholder="Username"
+          placeholder="Email (use email for sign in)"
           value={formData.username}
           onChange={handleInputChange}
           required
@@ -113,8 +115,8 @@ function AuthPage({ onAuthSuccess, theme, onToggleTheme }) {
           />
         )}
 
-        <button type="submit">
-          {isLogin ? "Sign In" : "Create Account"}
+        <button type="submit" disabled={loading}>
+          {loading ? "Please wait…" : isLogin ? "Sign In" : "Create Account"}
         </button>
 
         {message && (

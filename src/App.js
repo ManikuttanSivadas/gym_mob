@@ -21,6 +21,18 @@ function App() {
   const [activeExercise, setActiveExercise] = useState(null);
   const [currentSets, setCurrentSets] = useState([]);
 
+  // helper — derive a stable key/name from user object safely
+  function getUsernameKey(u) {
+    if (!u) return null;
+    return u.username || u.name || u.displayName || u.email || u.uid || null;
+  }
+
+  // helper — safe avatar initial
+  function getAvatarInitial(u) {
+    const src = (u && (u.name || u.username || u.displayName || u.email)) || "";
+    return (src && String(src)[0].toUpperCase()) || "?";
+  }
+
   // --- REFS for outside click ---
   const profileBtnRef = useRef(null);
   const profileDropdownRef = useRef(null);
@@ -29,31 +41,33 @@ function App() {
     const currentUser = AuthService.getCurrentUser();
     if (currentUser) {
       setUser(currentUser);
-      const userWorkouts = AuthService.getUserWorkouts(currentUser.username);
-      setWorkouts(userWorkouts);
 
-      const currentWorkoutState = AuthService.getCurrentWorkoutState(
-        currentUser.username
-      );
-      if (currentWorkoutState) {
-        setWorkoutName(currentWorkoutState.workoutName || "");
-        setWorkoutExercises(currentWorkoutState.workoutExercises || []);
-        setActiveExercise(currentWorkoutState.activeExercise || null);
-        setCurrentSets(currentWorkoutState.currentSets || []);
+      const key = getUsernameKey(currentUser);
+      // guard AuthService calls with a valid key
+      if (key && typeof AuthService.getUserWorkouts === "function") {
+        const userWorkouts = AuthService.getUserWorkouts(key) || [];
+        setWorkouts(userWorkouts);
+      }
+
+      if (key && typeof AuthService.getCurrentWorkoutState === "function") {
+        const currentWorkoutState = AuthService.getCurrentWorkoutState(key);
+        if (currentWorkoutState) {
+          setWorkoutName(currentWorkoutState.workoutName || "");
+          setWorkoutExercises(currentWorkoutState.workoutExercises || []);
+          setActiveExercise(currentWorkoutState.activeExercise || null);
+          setCurrentSets(currentWorkoutState.currentSets || []);
+        }
       }
     }
     setIsLoading(false);
   }, []);
 
+  // persist current workout state when user changes or workout data changes
   useEffect(() => {
-    if (user) {
-      const workoutState = {
-        workoutName,
-        workoutExercises,
-        activeExercise,
-        currentSets,
-      };
-      AuthService.saveCurrentWorkoutState(user.username, workoutState);
+    const key = getUsernameKey(user);
+    if (key && typeof AuthService.saveCurrentWorkoutState === "function") {
+      const workoutState = { workoutName, workoutExercises, activeExercise, currentSets };
+      AuthService.saveCurrentWorkoutState(key, workoutState);
     }
   }, [workoutName, workoutExercises, activeExercise, currentSets, user]);
 
@@ -82,41 +96,59 @@ function App() {
 
   function handleAuthSuccess(loggedInUser) {
     setUser(loggedInUser);
-    const userWorkouts = AuthService.getUserWorkouts(loggedInUser.username);
-    setWorkouts(userWorkouts);
+    const key = getUsernameKey(loggedInUser);
 
-    const currentWorkoutState = AuthService.getCurrentWorkoutState(
-      loggedInUser.username
-    );
-    if (currentWorkoutState) {
-      setWorkoutName(currentWorkoutState.workoutName || "");
-      setWorkoutExercises(currentWorkoutState.workoutExercises || []);
-      setActiveExercise(currentWorkoutState.activeExercise || null);
-      setCurrentSets(currentWorkoutState.currentSets || []);
+    if (key && typeof AuthService.getUserWorkouts === "function") {
+      const userWorkouts = AuthService.getUserWorkouts(key) || [];
+      setWorkouts(userWorkouts);
+    } else {
+      setWorkouts([]);
+    }
+
+    if (key && typeof AuthService.getCurrentWorkoutState === "function") {
+      const currentWorkoutState = AuthService.getCurrentWorkoutState(key);
+      if (currentWorkoutState) {
+        setWorkoutName(currentWorkoutState.workoutName || "");
+        setWorkoutExercises(currentWorkoutState.workoutExercises || []);
+        setActiveExercise(currentWorkoutState.activeExercise || null);
+        setCurrentSets(currentWorkoutState.currentSets || []);
+      }
     }
   }
 
+  // toggle theme (was referenced but not defined)
+  function handleToggleTheme() {
+    setTheme(prev => (prev === "light" ? "dark" : "light"));
+  }
+  
   function handleAddWorkout(workout) {
     const newWorkouts = [workout, ...workouts];
     setWorkouts(newWorkouts);
-    AuthService.saveUserWorkouts(user.username, newWorkouts);
-    AuthService.clearCurrentWorkoutState(user.username);
+    const key = getUsernameKey(user);
+    if (key && typeof AuthService.saveUserWorkouts === "function") {
+      AuthService.saveUserWorkouts(key, newWorkouts);
+    }
+    if (key && typeof AuthService.clearCurrentWorkoutState === "function") {
+      AuthService.clearCurrentWorkoutState(key);
+    }
   }
 
   function handleUpdateWorkouts(updatedWorkouts) {
     setWorkouts(updatedWorkouts);
-    AuthService.saveUserWorkouts(user.username, updatedWorkouts);
-  }
-
-  function handleToggleTheme() {
-    setTheme(theme === "light" ? "dark" : "light");
+    const key = getUsernameKey(user);
+    if (key && typeof AuthService.saveUserWorkouts === "function") {
+      AuthService.saveUserWorkouts(key, updatedWorkouts);
+    }
   }
 
   function handleLogout() {
-    if (user) {
-      AuthService.clearCurrentWorkoutState(user.username);
+    const key = getUsernameKey(user);
+    if (key && typeof AuthService.clearCurrentWorkoutState === "function") {
+      AuthService.clearCurrentWorkoutState(key);
     }
-    AuthService.logout();
+    if (typeof AuthService.logout === "function") {
+      AuthService.logout();
+    }
     setUser(null);
     setWorkouts([]);
     setWorkoutName("");
@@ -170,7 +202,7 @@ function App() {
               ref={profileBtnRef}
             >
               <div className="profile-btn-avatar">
-                {(user.name || user.username)[0].toUpperCase()}
+                {getAvatarInitial(user)}
               </div>
             </button>
             <div ref={profileDropdownRef}>
