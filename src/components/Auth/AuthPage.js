@@ -87,9 +87,9 @@ function AuthPage({ onAuthSuccess, theme, onToggleTheme }) {
 
       <form className="auth-form" onSubmit={handleSubmit}>
         <input
-          type="text"
+          type={isLogin ? "email" : "text"}
           name="username"
-          placeholder="Email (use email for sign in)"
+          placeholder={isLogin ? "Email (use email to sign in)" : "Username"}
           value={formData.username}
           onChange={handleInputChange}
           required
