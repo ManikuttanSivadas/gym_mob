@@ -11,7 +11,7 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts }) {
   const [filterDate, setFilterDate] = useState("");
   const [showDateFilter, setShowDateFilter] = useState(false);
 
-  // NEW: track which workouts are expanded (collapsed by default)
+  // track which workouts are expanded (collapsed by default)
   const [expandedWorkouts, setExpandedWorkouts] = useState([]);
 
   // Exercise editing states only
@@ -38,7 +38,6 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts }) {
       const day = String(oneYearAgo.getDate()).padStart(2, "0");
       return `${year}-${month}-${day}`;
     }
-    // find the oldest workout date in YYYY-MM-DD form
     const oldestDateStr = workouts.reduce((oldest, workout) => {
       const dateStr = workout.workoutDate
         ? workout.workoutDate
@@ -47,7 +46,6 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts }) {
       return dateStr < oldest ? dateStr : oldest;
     }, null);
 
-    // fallback to a year ago if something odd
     return oldestDateStr || (() => {
       const oneYearAgo = new Date();
       oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
@@ -142,7 +140,7 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts }) {
     return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   }
 
-  // NEW: toggle expand/collapse for a workout
+  // toggle expand/collapse for a workout
   function toggleWorkoutExpand(workoutId) {
     setExpandedWorkouts(prev => {
       if (prev.includes(workoutId)) {
@@ -363,48 +361,33 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts }) {
             (editingExercise && editingExercise.workoutId === workout.id);
 
           return (
-            <li key={workout.id} className="workout-item">
-              <div className="workout-header" style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <li key={workout.id} className="workout-item" style={{ marginBottom: 12 }}>
+              <div className="workout-header" style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div className="workout-name-badge" style={{ flex: 1 }}>
+                  <strong>{workout.name || "Workout"}</strong>
+                  <div style={{ fontSize: 13, color: "var(--text-muted)" }}>{formatWorkoutDate(workout)} · Saved {formatSaveTime(workout.date)}</div>
+                </div>
+
+                {/* single toggle button: "View" when collapsed, "Collapse" when expanded */}
                 <button
-                  className="workout-expand-btn"
+                  className="btn-secondary workout-toggle-btn"
                   onClick={() => toggleWorkoutExpand(workout.id)}
                   aria-expanded={isExpanded}
-                  title={isExpanded ? "Collapse workout" : "Expand workout"}
+                  title={isExpanded ? "Collapse workout" : "View workout"}
                   disabled={isEditingAnyExercise && !(editingExercise && editingExercise.workoutId === workout.id)}
-                  style={{ cursor: "pointer" }}
+                  style={{ minWidth: 90 }}
                 >
-                  {isExpanded ? "▾" : "▸"}
+                  {isExpanded ? "Collapse" : "View"}
                 </button>
-
-                <div
-                  className="workout-name-badge"
-                  onClick={() => toggleWorkoutExpand(workout.id)}
-                  style={{ cursor: "pointer", flex: 1 }}
-                  title={isExpanded ? "Collapse workout" : "Expand workout"}
-                >
-                  {workout.name || "Workout"}
-                </div>
-
-                <div className="workout-date-info" style={{ textAlign: "right" }}>
-                  <div className="workout-date">{formatWorkoutDate(workout)}</div>
-                  <div className="workout-save-time">Saved {formatSaveTime(workout.date)}</div>
-                </div>
               </div>
 
               {!isExpanded ? (
-                <div style={{ margin: "12px 0", color: "var(--text-muted)", fontSize: "13px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ margin: "12px 0", color: "var(--text-muted)", fontSize: 13, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div>{(workout.exercises || []).length} exercises completed</div>
-                  <button
-                    className="btn-secondary"
-                    onClick={() => toggleWorkoutExpand(workout.id)}
-                    disabled={isEditingAnyExercise}
-                  >
-                    View
-                  </button>
                 </div>
               ) : (
                 <>
-                  <div style={{ marginBottom: "12px", color: "var(--text-muted)", fontSize: "13px" }}>
+                  <div style={{ marginBottom: 12, color: "var(--text-muted)", fontSize: 13 }}>
                     {(workout.exercises || []).length} exercises completed
                   </div>
 
