@@ -354,40 +354,72 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts }) {
         </p>
       )}
 
-      <ul className="workout-list">
+      <ul className="workout-list" style={{ padding: 0, margin: 0 }}>
         {filteredWorkouts.map(workout => {
           const isExpanded =
             expandedWorkouts.includes(workout.id) ||
             (editingExercise && editingExercise.workoutId === workout.id);
 
           return (
-            <li key={workout.id} className="workout-item" style={{ marginBottom: 12 }}>
-              <div className="workout-header" style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div className="workout-name-badge" style={{ flex: 1 }}>
-                  <strong>{workout.name || "Workout"}</strong>
-                  <div style={{ fontSize: 13, color: "var(--text-muted)" }}>{formatWorkoutDate(workout)} · Saved {formatSaveTime(workout.date)}</div>
+            <li key={workout.id} className="workout-item" style={{ marginBottom: 12, listStyle: "none", borderRadius: 8, padding: 12 }}>
+              {/* HEADER: left = toggle button, center = workout name (centered), right = date aligned with app */}
+              <div
+                className="workout-header"
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "auto 1fr auto",
+                  alignItems: "center",
+                  gap: 12,
+                  position: "relative"
+                }}
+              >
+                {/* left: single toggle button */}
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  <button
+                    className="btn-secondary workout-toggle-btn"
+                    onClick={() => toggleWorkoutExpand(workout.id)}
+                    aria-expanded={isExpanded}
+                    title={isExpanded ? "Collapse workout" : "View workout"}
+                    disabled={isEditingAnyExercise && !(editingExercise && editingExercise.workoutId === workout.id)}
+                    style={{ minWidth: 84 }}
+                  >
+                    {isExpanded ? "Collapse" : "View"}
+                  </button>
                 </div>
 
-                {/* single toggle button: "View" when collapsed, "Collapse" when expanded */}
-                <button
-                  className="btn-secondary workout-toggle-btn"
+                {/* center: workout name (always centered visually) */}
+                <div
+                  className="workout-name-center"
+                  style={{
+                    textAlign: "center",
+                    color: "var(--text)",
+                    fontWeight: 600,
+                    fontSize: 16,
+                    padding: "0 8px",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis"
+                  }}
                   onClick={() => toggleWorkoutExpand(workout.id)}
-                  aria-expanded={isExpanded}
-                  title={isExpanded ? "Collapse workout" : "View workout"}
-                  disabled={isEditingAnyExercise && !(editingExercise && editingExercise.workoutId === workout.id)}
-                  style={{ minWidth: 90 }}
+                  title={workout.name || "Workout"}
                 >
-                  {isExpanded ? "Collapse" : "View"}
-                </button>
+                  {workout.name || "Workout"}
+                </div>
+
+                {/* right: date aligned with app — uses muted text variable for good contrast in both themes */}
+                <div style={{ textAlign: "right", color: "var(--text-muted)", fontSize: 13 }}>
+                  <div>{formatWorkoutDate(workout)}</div>
+                  <div style={{ marginTop: 2 }}>Saved {formatSaveTime(workout.date)}</div>
+                </div>
               </div>
 
               {!isExpanded ? (
-                <div style={{ margin: "12px 0", color: "var(--text-muted)", fontSize: 13, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div>{(workout.exercises || []).length} exercises completed</div>
+                <div style={{ marginTop: 12, color: "var(--text-muted)", fontSize: 13 }}>
+                  {(workout.exercises || []).length} exercises completed
                 </div>
               ) : (
                 <>
-                  <div style={{ marginBottom: 12, color: "var(--text-muted)", fontSize: 13 }}>
+                  <div style={{ marginTop: 12, marginBottom: 8, color: "var(--text-muted)", fontSize: 13 }}>
                     {(workout.exercises || []).length} exercises completed
                   </div>
 
