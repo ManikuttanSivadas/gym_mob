@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import ReactDOM from "react-dom";
 
 // Helper: generate simple unique id for new sets
 function generateId() {
@@ -6,135 +7,149 @@ function generateId() {
 }
 
 /*
-  Small MonthPicker component (month + year only).
-  Props:
-    - value: "YYYY-MM" or ""
-    - onChange: fn(ym: "YYYY-MM")
-    - min: "YYYY-MM"
-    - max: "YYYY-MM"
-    - onClose: optional fn() — called after a selection
+  MonthPicker modal (centered). Mobile-first:
+   - Click a month -> if different month sets that month; if same month clears filter
+   - No Clear button
+   - Click outside or press Escape closes modal
 */
 function MonthPicker({ value, onChange, min, max, onClose }) {
   const today = new Date();
   const initial = value || `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
-
   const [year, setYear] = useState(Number(initial.split("-")[0]));
-  const [selectedMonth, setSelectedMonth] = useState(Number(initial.split("-")[1]) - 1);
-
-  useEffect(() => {
-    if (value) {
-      const [y, m] = value.split("-");
-      setYear(Number(y));
-      setSelectedMonth(Number(m) - 1);
-    }
-  }, [value]);
 
   const monthNames = useMemo(
-    () =>
-      [
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-      ],
+    () => ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
     []
   );
+
+  const parseYMIndex = useCallback((ym) => {
+    if (!ym) return null;
+    const p = ym.split("-");
+    if (p.length !== 2) return null;
+    const y = Number(p[0]);
+    const m = Number(p[1]) - 1;
+    if (Number.isNaN(y) || Number.isNaN(m)) return null;
+    return y * 12 + m;
+  }, []);
+
+  const minIndex = parseYMIndex(min);
+  const maxIndex = parseYMIndex(max);
+
+  useEffect(() => {
+    function onKey(e) {
+      if (e.key === "Escape") onClose && onClose();
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
 
   function toYM(y, mIndex) {
     return `${y}-${String(mIndex + 1).padStart(2, "0")}`;
   }
 
   function isAllowed(y, mIndex) {
-    const ym = toYM(y, mIndex);
-    if (min && ym < min) return false;
-    if (max && ym > max) return false;
+    const idx = y * 12 + mIndex;
+    if (minIndex !== null && idx < minIndex) return false;
+    if (maxIndex !== null && idx > maxIndex) return false;
     return true;
   }
 
-  function handleSelect(y, mIndex) {
-    if (!isAllowed(y, mIndex)) return;
-    const ym = toYM(y, mIndex);
-    setSelectedMonth(mIndex);
-    onChange && onChange(ym);
+  function handleMonthClick(mIndex) {
+    if (!isAllowed(year, mIndex)) return;
+    const ym = toYM(year, mIndex);
+    if (ym === value) {
+      onChange && onChange(""); // toggle off when clicking same month
+    } else {
+      onChange && onChange(ym);
+    }
     onClose && onClose();
   }
 
-  return (
+  return ReactDOM.createPortal(
     <div
-      style={{
-        border: "1px solid var(--muted-border, rgba(0,0,0,0.08))",
-        background: "var(--card-bg, var(--bg))",
-        padding: 12,
-        borderRadius: 8,
-        boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
-        width: 320
-      }}
       role="dialog"
-      aria-label="Month picker"
+      aria-label="Select month"
+      onClick={() => onClose && onClose()}
+      style={{
+        position: "fixed",
+        inset: 0,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 1200,
+        background: "rgba(0,0,0,0.32)",
+        padding: 20
+      }}
     >
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-        <button
-          onClick={() => setYear(y => y - 1)}
-          aria-label="Previous year"
-          className="btn-secondary"
-          style={{ minWidth: 36 }}
-        >
-          ‹
-        </button>
-        <div style={{ fontWeight: 600 }}>{year}</div>
-        <button
-          onClick={() => setYear(y => y + 1)}
-          aria-label="Next year"
-          className="btn-secondary"
-          style={{ minWidth: 36 }}
-        >
-          ›
-        </button>
-      </div>
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          width: "94%",
+          maxWidth: 360,
+          borderRadius: 12,
+          background: "var(--card-bg, #fff)",
+          boxShadow: "0 12px 30px rgba(0,0,0,0.25)",
+          padding: 14,
+          border: "1px solid rgba(0,0,0,0.06)"
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+          <button
+            className="btn-ghost"
+            onClick={() => setYear((y) => y - 1)}
+            aria-label="Previous year"
+            style={{ padding: 6, borderRadius: 8 }}
+          >
+            ‹
+          </button>
+          <div style={{ fontWeight: 700 }}>{year}</div>
+          <button
+            className="btn-ghost"
+            onClick={() => setYear((y) => y + 1)}
+            aria-label="Next year"
+            style={{ padding: 6, borderRadius: 8 }}
+          >
+            ›
+          </button>
+        </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
-        {monthNames.map((label, idx) => {
-          const allowed = isAllowed(year, idx);
-          const isSelected = year === Number((value || "").slice(0, 4)) && idx === Number((value || "").slice(5, 7)) - 1;
-          return (
-            <button
-              key={label}
-              onClick={() => handleSelect(year, idx)}
-              disabled={!allowed}
-              className={`month-btn ${isSelected ? "selected" : ""}`}
-              style={{
-                padding: "8px 10px",
-                borderRadius: 6,
-                background: isSelected ? "var(--accent, #2b86f6)" : "transparent",
-                color: isSelected ? "white" : "var(--text)",
-                border: "1px solid transparent",
-                cursor: allowed ? "pointer" : "not-allowed",
-                opacity: allowed ? 1 : 0.45,
-                textAlign: "center"
-              }}
-            >
-              {label}
-            </button>
-          );
-        })}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
+          {monthNames.map((label, idx) => {
+            const allowed = isAllowed(year, idx);
+            const ym = toYM(year, idx);
+            const isSelected = value === ym;
+            return (
+              <button
+                key={label}
+                onClick={() => handleMonthClick(idx)}
+                disabled={!allowed}
+                style={{
+                  padding: 12,
+                  borderRadius: 8,
+                  background: isSelected ? "var(--accent, #1e90ff)" : "transparent",
+                  color: isSelected ? "#fff" : "var(--text)",
+                  border: "1px solid transparent",
+                  fontWeight: 700,
+                  textAlign: "center",
+                  cursor: allowed ? "pointer" : "not-allowed",
+                  opacity: allowed ? 1 : 0.45,
+                  minHeight: 44
+                }}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+        {/* small close action for mobile (optional, still closes) */}
+        <div style={{ marginTop: 12, display: "flex", justifyContent: "flex-end" }}>
+          <button className="btn-secondary" onClick={() => onClose && onClose()} style={{ padding: "8px 12px", borderRadius: 8 }}>
+            Close
+          </button>
+        </div>
       </div>
-
-      <div style={{ marginTop: 10, display: "flex", justifyContent: "flex-end", gap: 8 }}>
-        <button
-          className="btn-secondary"
-          onClick={() => {
-            onChange && onChange("");
-            onClose && onClose();
-          }}
-        >
-          Clear
-        </button>
-        <button
-          className="btn-primary"
-          onClick={() => handleSelect(year, selectedMonth)}
-        >
-          Select
-        </button>
-      </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -144,9 +159,7 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts }) {
 
   // MONTH filter state (YYYY-MM)
   const [filterMonth, setFilterMonth] = useState("");
-  const [showDateFilter, setShowDateFilter] = useState(false);
-
-  // show/hide the custom month picker popover
+  // show/hide centered MonthPicker modal
   const [showMonthPicker, setShowMonthPicker] = useState(false);
 
   // track expanded workouts (collapsed by default)
@@ -159,7 +172,6 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts }) {
   const [newSetWeight, setNewSetWeight] = useState("");
   const [newSetReps, setNewSetReps] = useState("");
 
-  // Helpers for month-picker limits
   function getTodayMonth() {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
@@ -186,16 +198,13 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts }) {
 
   // Filter by month (YYYY-MM)
   const filteredWorkouts = filterMonth
-    ? workouts.filter(workout => {
+    ? workouts.filter((workout) => {
         const dateStr = workout.workoutDate || (workout.date || "").split("T")[0] || "";
         const month = dateStr.slice(0, 7);
         return month === filterMonth;
       })
     : workouts;
 
-  const isEmptyFilterMonth = filterMonth && filteredWorkouts.length === 0;
-
-  // Date formatting for display
   function formatWorkoutDate(workout) {
     const dateStr = workout.workoutDate || (workout.date || "").split("T")[0] || "";
     const date = new Date(dateStr + "T12:00:00");
@@ -222,7 +231,6 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts }) {
   function formatFilterMonth(monthStr) {
     if (!monthStr) return "";
     const [y, m] = monthStr.split("-");
-    if (!y || !m) return monthStr;
     const monthIndex = Number(m) - 1;
     const date = new Date(Number(y), monthIndex, 1);
     const today = new Date();
@@ -242,21 +250,15 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts }) {
     return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   }
 
-  // expand/collapse
   function toggleWorkoutExpand(workoutId) {
-    setExpandedWorkouts(prev => {
-      if (prev.includes(workoutId)) return prev.filter(id => id !== workoutId);
-      return [...prev, workoutId];
-    });
+    setExpandedWorkouts((prev) => (prev.includes(workoutId) ? prev.filter((id) => id !== workoutId) : [...prev, workoutId]));
   }
 
-  // edit exercise
   function handleEditExercise(workoutId, exercise) {
     setEditingExercise({ workoutId, exerciseId: exercise.id });
     setEditExerciseName(exercise.name || "");
     setEditingSets(Array.isArray(exercise.sets) ? [...exercise.sets] : []);
-    // auto-expand workout when editing
-    setExpandedWorkouts(prev => (prev.includes(workoutId) ? prev : [...prev, workoutId]));
+    setExpandedWorkouts((prev) => (prev.includes(workoutId) ? prev : [...prev, workoutId]));
   }
 
   function handleAddSetToEdit() {
@@ -265,13 +267,13 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts }) {
       return;
     }
     const set = { id: generateId(), weight: Number(newSetWeight), reps: Number(newSetReps) };
-    setEditingSets(prev => [...prev, set]);
+    setEditingSets((prev) => [...prev, set]);
     setNewSetWeight("");
     setNewSetReps("");
   }
 
   function handleRemoveSetFromEdit(setId) {
-    setEditingSets(prev => prev.filter(s => s.id !== setId));
+    setEditingSets((prev) => prev.filter((s) => s.id !== setId));
   }
 
   function handleSaveExerciseChanges() {
@@ -284,16 +286,14 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts }) {
       alert("Add at least one set.");
       return;
     }
-
-    const updated = workouts.map(w => {
+    const updated = workouts.map((w) => {
       if (w.id !== editingExercise.workoutId) return w;
-      const updatedExercises = (w.exercises || []).map(ex => {
+      const updatedExercises = (w.exercises || []).map((ex) => {
         if (ex.id !== editingExercise.exerciseId) return ex;
         return { ...ex, name: editExerciseName.trim(), sets: [...editingSets] };
       });
       return { ...w, exercises: updatedExercises };
     });
-
     onUpdateWorkouts && onUpdateWorkouts(updated);
     handleCancelExerciseEdit();
   }
@@ -306,7 +306,6 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts }) {
     setNewSetReps("");
   }
 
-  // delete flows
   function handleDeleteExercise(workoutId, exerciseId, exerciseName) {
     setDeleteTarget({ type: "exercise", workoutId, exerciseId, exerciseName });
     setShowDeleteModal(true);
@@ -314,108 +313,89 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts }) {
 
   function handleConfirmDelete() {
     if (!deleteTarget) return;
-
     if (deleteTarget.type === "exercise") {
       const updatedWorkouts = workouts
-        .map(w => {
+        .map((w) => {
           if (w.id !== deleteTarget.workoutId) return w;
-          const exercises = (w.exercises || []).filter(e => e.id !== deleteTarget.exerciseId);
+          const exercises = (w.exercises || []).filter((e) => e.id !== deleteTarget.exerciseId);
           return { ...w, exercises };
         })
-        .filter(w => (w.exercises || []).length > 0);
+        .filter((w) => (w.exercises || []).length > 0);
       onUpdateWorkouts && onUpdateWorkouts(updatedWorkouts);
     } else if (deleteTarget.type === "workout") {
-      const updatedWorkouts = workouts.filter(w => w.id !== deleteTarget.workoutId);
+      const updatedWorkouts = workouts.filter((w) => w.id !== deleteTarget.workoutId);
       onUpdateWorkouts && onUpdateWorkouts(updatedWorkouts);
     }
-
     setShowDeleteModal(false);
     setDeleteTarget(null);
-  }
-
-  function handleCancelDelete() {
-    setShowDeleteModal(false);
-    setDeleteTarget(null);
-  }
-
-  function clearMonthFilter() {
-    setFilterMonth("");
   }
 
   const isEditingAnyExercise = !!editingExercise;
 
+  // open month modal directly (mobile) — user requested direct open on icon click
+  function openMonthModal() {
+    if (isEditingAnyExercise) return;
+    setShowMonthPicker(true);
+  }
+
   return (
-    <div className="tab-section">
-      <div className="history-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-        <h2 style={{ margin: 0 }}>Workout History</h2>
-        <div className="history-controls">
-          <button
-            className="btn-secondary"
-            onClick={() => {
-              setShowDateFilter(v => !v);
-              setShowMonthPicker(false);
-            }}
-            disabled={isEditingAnyExercise}
-          >
-            Filter by Month
-          </button>
-        </div>
+    <div className="tab-section" style={{ padding: 12 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+        <h2 style={{ margin: 0, fontSize: 18 }}>Workout History</h2>
+
+        {/* Filter icon on the right side (icon-only button) */}
+        <button
+          title="Filter by month"
+          aria-label="Filter by month"
+          onClick={openMonthModal}
+          disabled={isEditingAnyExercise}
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 10,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "transparent",
+            border: "1px solid transparent",
+            padding: 6
+          }}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--text)" }}>
+            <path d="M3 5h18" />
+            <path d="M6 12h12" />
+            <path d="M10 19h4" />
+          </svg>
+        </button>
       </div>
 
-      {/* Filter area */}
-      {showDateFilter && (
-        <div className="date-filter-section" style={{ marginTop: 12, position: "relative" }}>
-          <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-            <label style={{ fontSize: 14, color: "var(--text-muted)" }}>Choose month</label>
-
-            {/* Trigger for custom MonthPicker (matches LogWorkoutTab style) */}
-            <div style={{ position: "relative" }}>
-              <button
-                onClick={() => setShowMonthPicker(v => !v)}
-                className="btn-secondary"
-                disabled={isEditingAnyExercise}
-                aria-expanded={showMonthPicker}
-                style={{ minWidth: 160, textAlign: "left", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}
-              >
-                <span style={{ color: filterMonth ? "var(--text)" : "var(--text-muted)" }}>
-                  {filterMonth ? formatFilterMonth(filterMonth) : "Select month"}
-                </span>
-                <span style={{ opacity: 0.7 }}>▾</span>
-              </button>
-
-              {/* Popover month picker */}
-              {showMonthPicker && (
-                <div style={{ position: "absolute", zIndex: 40, top: "calc(100% + 8px)", left: 0 }}>
-                  <MonthPicker
-                    value={filterMonth}
-                    onChange={ym => {
-                      setFilterMonth(ym);
-                      setShowMonthPicker(false);
-                    }}
-                    onClose={() => setShowMonthPicker(false)}
-                    min={getMinFilterMonth()}
-                    max={getTodayMonth()}
-                  />
-                </div>
-              )}
-            </div>
-
-            {filterMonth ? (
-              <>
-                <div style={{ color: "var(--text-muted)" }}>{formatFilterMonth(filterMonth)}</div>
-                <button className="btn-danger" onClick={() => { clearMonthFilter(); setShowMonthPicker(false); }} disabled={isEditingAnyExercise}>Clear</button>
-              </>
-            ) : (
-              <div style={{ color: "var(--text-muted)" }}>No month selected</div>
-            )}
+      {/* small selected month pill below header (mobile-friendly) */}
+      <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 8 }}>
+        {filterMonth ? (
+          <div style={{ padding: "6px 10px", borderRadius: 16, background: "rgba(30,144,255,0.12)", color: "var(--text)", fontWeight: 600 }}>
+            {formatFilterMonth(filterMonth)}
           </div>
-        </div>
+        ) : (
+          <div style={{ color: "var(--text-muted)", fontSize: 14 }}>Showing all workouts</div>
+        )}
+      </div>
+
+      {/* MonthPicker centered modal */}
+      {showMonthPicker && (
+        <MonthPicker
+          value={filterMonth}
+          onChange={(ym) => setFilterMonth(ym)}
+          onClose={() => setShowMonthPicker(false)}
+          min={getMinFilterMonth()}
+          max={getTodayMonth()}
+        />
       )}
 
+      {/* Filtered results header */}
       {filterMonth && (
-        <div style={{ marginTop: 12, color: "var(--text-muted)" }}>
+        <div style={{ marginTop: 12, color: "var(--text-muted)", fontSize: 13 }}>
           {filteredWorkouts.length === 0 ? (
-            <div>No workouts for {formatFilterMonth(filterMonth)}. <button className="link-btn" onClick={() => { clearMonthFilter(); setShowMonthPicker(false); }}>Show all</button></div>
+            <div>No workouts for {formatFilterMonth(filterMonth)}. <button className="link-btn" onClick={() => setFilterMonth("")}>Show all</button></div>
           ) : (
             <div>Found {filteredWorkouts.length} workout{filteredWorkouts.length !== 1 ? "s" : ""} for {formatFilterMonth(filterMonth)}</div>
           )}
@@ -428,101 +408,67 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts }) {
         </p>
       )}
 
-      <ul className="workout-list" style={{ padding: 0, margin: "12px 0 0 0", listStyle: "none" }}>
-        {filteredWorkouts.map(workout => {
+      <ul style={{ padding: 0, marginTop: 12, listStyle: "none" }}>
+        {filteredWorkouts.map((workout) => {
           const isExpanded = expandedWorkouts.includes(workout.id) || (editingExercise && editingExercise.workoutId === workout.id);
-
           return (
-            <li key={workout.id} style={{ marginBottom: 12, borderRadius: 8, padding: 12, background: "var(--card-bg, transparent)" }}>
-              {/* header: grid with toggle, centered name, right aligned date */}
-              <div style={{ display: "grid", gridTemplateColumns: "auto 1fr auto", alignItems: "center", gap: 12 }}>
+            <li key={workout.id} style={{ marginBottom: 12, borderRadius: 10, padding: 12, background: "var(--card-bg, transparent)" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "auto 1fr auto", gap: 12, alignItems: "center" }}>
                 <div>
                   <button
-                    className="btn-secondary"
                     onClick={() => toggleWorkoutExpand(workout.id)}
-                    aria-expanded={isExpanded}
-                    title={isExpanded ? "Collapse" : "View"}
+                    style={{ minWidth: 72 }}
                     disabled={isEditingAnyExercise && !(editingExercise && editingExercise.workoutId === workout.id)}
-                    style={{ minWidth: 84 }}
                   >
                     {isExpanded ? "Collapse" : "View"}
                   </button>
                 </div>
 
-                <div
-                  onClick={() => toggleWorkoutExpand(workout.id)}
-                  title={workout.name || "Workout"}
-                  style={{
-                    textAlign: "center",
-                    fontWeight: 600,
-                    color: "var(--text)",
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    cursor: "pointer"
-                  }}
-                >
+                <div onClick={() => toggleWorkoutExpand(workout.id)} style={{ textAlign: "center", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                   {workout.name || "Workout"}
                 </div>
 
-                <div style={{ textAlign: "right", color: "var(--text-muted)", fontSize: 13 }}>
+                <div style={{ textAlign: "right", color: "var(--text-muted)", fontSize: 12 }}>
                   <div>{formatWorkoutDate(workout)}</div>
-                  <div style={{ marginTop: 2 }}>Saved {formatSaveTime(workout.date)}</div>
+                  <div style={{ marginTop: 4 }}>Saved {formatSaveTime(workout.date)}</div>
                 </div>
               </div>
 
-              {!isExpanded ? (
-                <div style={{ marginTop: 12, color: "var(--text-muted)", fontSize: 13 }}>
-                  {(workout.exercises || []).length} exercises completed
-                </div>
-              ) : (
-                <>
-                  <div style={{ marginTop: 12, marginBottom: 8, color: "var(--text-muted)", fontSize: 13 }}>
-                    {(workout.exercises || []).length} exercises completed
-                  </div>
-
-                  {(workout.exercises || []).map(exercise => {
+              {isExpanded && (
+                <div style={{ marginTop: 12 }}>
+                  {(workout.exercises || []).map((exercise) => {
                     const isEditingThis = editingExercise && editingExercise.workoutId === workout.id && editingExercise.exerciseId === exercise.id;
                     return (
-                      <div key={exercise.id} style={{ marginBottom: 12 }}>
+                      <div key={exercise.id} style={{ marginBottom: 10 }}>
                         {isEditingThis ? (
                           <div>
-                            <div style={{ marginBottom: 8 }}>
-                              <input
-                                type="text"
-                                value={editExerciseName}
-                                onChange={e => setEditExerciseName(e.target.value)}
-                                placeholder="Exercise name"
-                              />
-                            </div>
-
-                            <div style={{ marginBottom: 8 }}>
-                              <div style={{ marginBottom: 6 }}>Sets</div>
-                              {editingSets.map((s, idx) => (
-                                <div key={s.id} style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center", marginBottom: 6 }}>
-                                  <div>Set {idx + 1} • {s.weight} kg × {s.reps} reps</div>
-                                  <button className="btn-danger" onClick={() => handleRemoveSetFromEdit(s.id)}>Remove</button>
+                            <input value={editExerciseName} onChange={(e) => setEditExerciseName(e.target.value)} placeholder="Exercise name" style={{ width: "100%", marginBottom: 8 }} />
+                            <div>
+                              {editingSets.map((s, i) => (
+                                <div key={s.id} style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                                  <div>Set {i + 1} • {s.weight} kg × {s.reps}</div>
+                                  <button onClick={() => handleRemoveSetFromEdit(s.id)}>Remove</button>
                                 </div>
                               ))}
                               <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                                <input type="number" placeholder="Weight (kg)" value={newSetWeight} onChange={e => setNewSetWeight(e.target.value)} min={0} step={0.5} />
-                                <input type="number" placeholder="Reps" value={newSetReps} onChange={e => setNewSetReps(e.target.value)} min={1} />
-                                <button className="btn-primary" onClick={handleAddSetToEdit}>Add Set</button>
+                                <input type="number" value={newSetWeight} onChange={(e) => setNewSetWeight(e.target.value)} placeholder="Weight" />
+                                <input type="number" value={newSetReps} onChange={(e) => setNewSetReps(e.target.value)} placeholder="Reps" />
+                                <button onClick={handleAddSetToEdit}>Add</button>
                               </div>
                             </div>
 
-                            <div style={{ display: "flex", gap: 8 }}>
-                              <button className="btn-success" onClick={handleSaveExerciseChanges}>Save</button>
-                              <button className="btn-secondary" onClick={handleCancelExerciseEdit}>Cancel</button>
+                            <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                              <button onClick={handleSaveExerciseChanges}>Save</button>
+                              <button onClick={() => handleCancelExerciseEdit()}>Cancel</button>
                             </div>
                           </div>
                         ) : (
                           <div>
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                              <h4 style={{ margin: 0 }}>{exercise.name}</h4>
+                              <div style={{ fontWeight: 700 }}>{exercise.name}</div>
                               <div style={{ display: "flex", gap: 8 }}>
-                                <button className="btn-edit" onClick={() => handleEditExercise(workout.id, exercise)} disabled={isEditingAnyExercise}>Edit</button>
-                                <button className="btn-danger" onClick={() => handleDeleteExercise(workout.id, exercise.id, exercise.name)} disabled={isEditingAnyExercise}>Delete</button>
+                                <button onClick={() => handleEditExercise(workout.id, exercise)} disabled={isEditingAnyExercise}>Edit</button>
+                                <button onClick={() => handleDeleteExercise(workout.id, exercise.id, exercise.name)} disabled={isEditingAnyExercise}>Delete</button>
                               </div>
                             </div>
                             <ul style={{ marginTop: 8 }}>
@@ -533,7 +479,7 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts }) {
                       </div>
                     );
                   })}
-                </>
+                </div>
               )}
             </li>
           );
@@ -541,8 +487,8 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts }) {
       </ul>
 
       {showDeleteModal && (
-        <div className="modal-overlay" onClick={handleCancelDelete} style={{ position: "fixed", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div className="modal-container" onClick={e => e.stopPropagation()} style={{ background: "var(--card-bg)", padding: 16, borderRadius: 8, width: 420 }}>
+        <div style={{ position: "fixed", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1300, background: "rgba(0,0,0,0.32)" }} onClick={() => setShowDeleteModal(false)}>
+          <div onClick={(e) => e.stopPropagation()} style={{ width: "90%", maxWidth: 420, background: "var(--card-bg)", padding: 16, borderRadius: 10 }}>
             <h3 style={{ marginTop: 0 }}>{deleteTarget?.type === "workout" ? "Delete Workout" : "Delete Exercise"}</h3>
             <p style={{ color: "var(--text-muted)" }}>
               {deleteTarget?.type === "workout"
@@ -550,8 +496,8 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts }) {
                 : `Are you sure you want to delete "${deleteTarget?.exerciseName}"? This cannot be undone.`}
             </p>
             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 12 }}>
-              <button className="btn-modal-secondary" onClick={handleCancelDelete}>Cancel</button>
-              <button className="btn-modal-primary" onClick={handleConfirmDelete}>{deleteTarget?.type === "workout" ? "Delete Workout" : "Delete Exercise"}</button>
+              <button onClick={() => setShowDeleteModal(false)}>Cancel</button>
+              <button onClick={handleConfirmDelete}>Delete</button>
             </div>
           </div>
         </div>
