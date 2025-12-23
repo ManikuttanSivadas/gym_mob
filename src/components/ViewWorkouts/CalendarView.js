@@ -58,6 +58,12 @@ const CalendarView = memo(function CalendarView({
     setCalendarMonth(new Date());
   }
 
+  function isCurrentMonth() {
+    const today = new Date();
+    return calendarMonth.getFullYear() === today.getFullYear() && 
+           calendarMonth.getMonth() === today.getMonth();
+  }
+
   function renderCalendarGrid() {
     const daysInMonth = getDaysInMonth(calendarMonth);
     const firstDay = getFirstDayOfMonth(calendarMonth);
@@ -128,8 +134,16 @@ const CalendarView = memo(function CalendarView({
           <button
             type="button"
             onClick={goToNextMonth}
-            style={{ background: "transparent", border: "none", cursor: "pointer", fontSize: 20, color: "var(--text-primary)" }}
-            title="Next month"
+            disabled={isCurrentMonth()}
+            style={{ 
+              background: "transparent", 
+              border: "none", 
+              cursor: isCurrentMonth() ? "not-allowed" : "pointer", 
+              fontSize: 20, 
+              color: isCurrentMonth() ? "var(--text-muted)" : "var(--text-primary)",
+              opacity: isCurrentMonth() ? 0.5 : 1,
+            }}
+            title={isCurrentMonth() ? "Cannot view future dates" : "Next month"}
           >
             ›
           </button>
