@@ -7,6 +7,7 @@ import {
   sendPasswordResetEmail,
 } from "firebase/auth";
 import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
+import { sanitizeString, isValidEmail, checkRateLimit, clearRateLimit } from "../../utils/security";
 
 const mapError = (e) => {
   // keep message simple for UI
@@ -40,12 +41,35 @@ function storageKeyProfile(uid) {
 const AuthService = {
   async signup(username, password, email) {
     try {
-      const userCred = await createUserWithEmailAndPassword(auth, email, password);
+      // Input validation
+      if (!email || !isValidEmail(email)) {
+        return { success: false, error: "Invalid email address" };
+      }
+      
+      if (!username || username.trim().length < 2) {
+        return { success: false, error: "Username must be at least 2 characters" };
+      }
+      
+      if (!password || password.length < 8) {
+        return { success: false, error: "Password must be at least 8 characters" };
+      }
+      
+      // Rate limiting check
+      const rateLimit = checkRateLimit(email, 5, 3600000); // 5 attempts per hour
+      if (!rateLimit.allowed) {
+        return { success: false, error: "Too many signup attempts. Please try again later." };
+      }
+      
+      // Sanitize inputs
+      const sanitizedUsername = sanitizeString(username, 50);
+      const sanitizedEmail = email.toLowerCase().trim();
+      
+      const userCred = await createUserWithEmailAndPassword(auth, sanitizedEmail, password);
 
       // try to set firebase displayName (best-effort)
       try {
-        if (username && username.trim()) {
-          await userCred.user.updateProfile?.({ displayName: username }) // safe call if sdk attaches method
+        if (sanitizedUsername) {
+          await userCred.user.updateProfile?.({ displayName: sanitizedUsername })
             .catch(() => {}); // ignore update errors
         }
       } catch (e) {
@@ -54,13 +78,16 @@ const AuthService = {
 
       const user = {
         uid: userCred.user.uid,
-        displayName: userCred.user.displayName || username || null,
-        username: username || (userCred.user.displayName || null),
-        email: userCred.user.email || email || null,
+        displayName: userCred.user.displayName || sanitizedUsername || null,
+        username: sanitizedUsername || (userCred.user.displayName || null),
+        email: sanitizedEmail,
       };
 
       // persist minimal user for other parts of the app
       try { localStorage.setItem("currentUser", JSON.stringify(user)); } catch (e) {}
+      
+      // Clear rate limit on successful signup
+      clearRateLimit(email);
 
       return { success: true, user };
     } catch (e) {
@@ -71,7 +98,20 @@ const AuthService = {
   // sign in with email + password
   async login(identifier, password) {
     try {
-      const userCred = await signInWithEmailAndPassword(auth, identifier, password);
+      // Input validation
+      if (!identifier || !password) {
+        return { success: false, error: "Email and password required" };
+      }
+      
+      // Rate limiting check
+      const rateLimit = checkRateLimit(identifier, 10, 900000); // 10 attempts per 15 minutes
+      if (!rateLimit.allowed) {
+        return { success: false, error: "Too many login attempts. Please try again later." };
+      }
+      
+      const sanitizedEmail = identifier.toLowerCase().trim();
+      
+      const userCred = await signInWithEmailAndPassword(auth, sanitizedEmail, password);
       const user = {
         uid: userCred.user.uid,
         displayName: userCred.user.displayName || null,
@@ -79,6 +119,10 @@ const AuthService = {
         email: userCred.user.email || null,
       };
       try { localStorage.setItem("currentUser", JSON.stringify(user)); } catch (e) {}
+      
+      // Clear rate limit on successful login
+      clearRateLimit(identifier);
+      
       return { success: true, user };
     } catch (e) {
       return { success: false, error: mapError(e) };
