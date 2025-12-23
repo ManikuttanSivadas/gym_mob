@@ -32,6 +32,9 @@ function storageKeyWorkouts(uid) {
 function storageKeyCurrentWorkout(uid) {
   return `currentWorkout_${uid}`;
 }
+function storageKeyProfile(uid) {
+  return `profile_${uid}`;
+}
 
 const AuthService = {
   async signup(username, password, email) {
@@ -161,12 +164,12 @@ const AuthService = {
   },
 
   // Persist an array of workouts to Firestore (and localStorage)
-  async saveUserWorkouts(uid, workouts) {
-    if (!uid) return { success: false, error: "Missing user id" };
+  async saveUserWorkouts(uid, email, workouts) {
+    if (!email) return { success: false, error: "Missing email" };
     try {
       try { localStorage.setItem(storageKeyWorkouts(uid), JSON.stringify(workouts)); } catch (e) {}
       if (db) {
-        await setDoc(doc(db, "users", uid), { workouts }, { merge: true });
+        await setDoc(doc(db, "users", email), { workouts }, { merge: true });
       }
       return { success: true };
     } catch (e) {
@@ -203,12 +206,12 @@ const AuthService = {
     return null;
   },
 
-  async saveCurrentWorkoutState(uid, state) {
-    if (!uid) return { success: false, error: "Missing user id" };
+  async saveCurrentWorkoutState(uid, email, state) {
+    if (!email) return { success: false, error: "Missing email" };
     try {
       try { localStorage.setItem(storageKeyCurrentWorkout(uid), JSON.stringify(state)); } catch (e) {}
       if (db) {
-        await setDoc(doc(db, "users", uid), { currentWorkout: state }, { merge: true });
+        await setDoc(doc(db, "users", email), { currentWorkout: state }, { merge: true });
       }
       return { success: true };
     } catch (e) {
@@ -216,13 +219,13 @@ const AuthService = {
     }
   },
 
-  async clearCurrentWorkoutState(uid) {
+  async clearCurrentWorkoutState(uid, email) {
     try {
       if (uid) {
         try { localStorage.removeItem(storageKeyCurrentWorkout(uid)); } catch (e) {}
-        if (db) {
+        if (db && email) {
           // clear field by setting to null (merge)
-          await setDoc(doc(db, "users", uid), { currentWorkout: null }, { merge: true });
+          await setDoc(doc(db, "users", email), { currentWorkout: null }, { merge: true });
         }
       } else {
         // clear generic keys
@@ -234,10 +237,40 @@ const AuthService = {
     }
   },
 
+  // Save user profile data to Firestore
+  async saveUserProfile(uid, email, profileData) {
+    if (!email) return { success: false, error: "Missing email" };
+    try {
+      // Save to localStorage with uid-specific key
+      try { localStorage.setItem(storageKeyProfile(uid), JSON.stringify(profileData)); } catch (e) {}
+      
+      if (db) {
+        await setDoc(doc(db, "users", email), { profile: profileData }, { merge: true });
+      }
+      return { success: true };
+    } catch (e) {
+      return { success: false, error: e.message || String(e) };
+    }
+  },
+
+  // Get user profile data from Firestore
+  async getUserProfile(uid, email) {
+    if (!email) return null;
+    try {
+      if (db) {
+        const d = await getDoc(doc(db, "users", email));
+        if (d.exists() && d.data().profile) {
+          return d.data().profile;
+        }
+      }
+    } catch (e) { /* ignore */ }
+    return null;
+  },
+
   // subscribe to workouts in Firestore; callback receives array of workouts
-  subscribeToWorkouts(uid, cb) {
-    if (!uid || !db || typeof cb !== "function") return () => {};
-    const userDoc = doc(db, "users", uid);
+  subscribeToWorkouts(uid, email, cb) {
+    if (!email || !db || typeof cb !== "function") return () => {};
+    const userDoc = doc(db, "users", email);
     const unsub = onSnapshot(
       userDoc,
       (snap) => {

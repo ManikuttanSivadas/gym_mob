@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-export default function ProfileDropdown({ user, onLogout, onClose, isOpen }) {
+export default function ProfileDropdown({ user, onLogout, onClose, isOpen, onProfileClick }) {
   const [knowUsOpen, setKnowUsOpen] = useState(false);
 
   // Extract username from email if needed
@@ -29,17 +29,36 @@ export default function ProfileDropdown({ user, onLogout, onClose, isOpen }) {
 
   return (
     <>
-      <div className="dropdown-overlay" onClick={onClose} />
+      <div className="profile-dropdown-overlay" onClick={onClose} />
       <div className="profile-dropdown">
         {/* Profile Info */}
         <div className="profile-dropdown-header">
-          <div className="profile-dropdown-avatar">{initial}</div>
+          <div className="profile-dropdown-avatar">
+            {user && user.photo ? (
+              <img src={user.photo} alt="Profile" className="profile-dropdown-avatar-image" />
+            ) : (
+              initial
+            )}
+          </div>
           <div className="profile-dropdown-info">
             <div className="profile-dropdown-name">{displayName}</div>
             <div className="profile-dropdown-email">{email}</div>
           </div>
         </div>
 
+        <div className="profile-dropdown-divider" />
+        {/* Profile Tab */}
+        <div className="profile-dropdown-profile-tab">
+          <button
+            className="profile-dropdown-item"
+            onClick={() => {
+              onProfileClick && onProfileClick();
+              onClose && onClose();
+            }}
+          >
+            Profile
+          </button>
+        </div>
         <div className="profile-dropdown-divider" />
         {/* Collapsible Know Us Tab */}
         <div className="profile-dropdown-know-us-tab">

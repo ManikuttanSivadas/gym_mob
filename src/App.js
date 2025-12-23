@@ -3,6 +3,7 @@ import LogWorkoutTab from "./components/LogWorkout/LogWorkoutTab";
 import ViewWorkoutsTab from "./components/ViewWorkouts/ViewWorkoutsTab";
 import RestTimerTab from "./components/Timer/RestTimerTab";
 import AuthPage from "./components/Auth/AuthPage";
+import ProfilePage from "./components/Auth/ProfilePage";
 import ThemeToggle from "./components/Common/ThemeToggle";
 import ProfileDropdown from "./components/Auth/ProfileDropdown";
 import AuthService from "./components/Auth/AuthService";
@@ -22,6 +23,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [workoutsLoading, setWorkoutsLoading] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [showProfilePage, setShowProfilePage] = useState(false);
 
   const [workoutName, setWorkoutName] = useState("");
   const [workoutExercises, setWorkoutExercises] = useState([]);
@@ -66,10 +68,11 @@ function App() {
   // subscribe to remote workouts when user is present
   useEffect(() => {
     if (!user) return;
-    const uid = user.uid || user.username || user.email;
-    if (!uid || typeof AuthService.subscribeToWorkouts !== "function") return;
+    const uid = user.uid;
+    const email = user.email;
+    if (!uid || !email || typeof AuthService.subscribeToWorkouts !== "function") return;
     setWorkoutsLoading(true);
-    const unsub = AuthService.subscribeToWorkouts(uid, (workoutsFromDb) => {
+    const unsub = AuthService.subscribeToWorkouts(uid, email, (workoutsFromDb) => {
       setWorkouts(workoutsFromDb || []);
       setWorkoutsLoading(false);
     });
@@ -81,9 +84,10 @@ function App() {
   // persist current workout state when user changes or workout data changes
   useEffect(() => {
     const uid = user?.uid;
-    if (uid && typeof AuthService.saveCurrentWorkoutState === "function") {
+    const email = user?.email;
+    if (uid && email && typeof AuthService.saveCurrentWorkoutState === "function") {
       const workoutState = { workoutName, workoutExercises, activeExercise, currentSets };
-      AuthService.saveCurrentWorkoutState(uid, workoutState);
+      AuthService.saveCurrentWorkoutState(uid, email, workoutState);
     }
   }, [workoutName, workoutExercises, activeExercise, currentSets, user]);
 
@@ -146,26 +150,29 @@ function App() {
     const newWorkouts = [workout, ...workouts];
     setWorkouts(newWorkouts);
     const uid = user?.uid;
-    if (uid && typeof AuthService.saveUserWorkouts === "function") {
-      AuthService.saveUserWorkouts(uid, newWorkouts);
+    const email = user?.email;
+    if (uid && email && typeof AuthService.saveUserWorkouts === "function") {
+      AuthService.saveUserWorkouts(uid, email, newWorkouts);
     }
-    if (uid && typeof AuthService.clearCurrentWorkoutState === "function") {
-      AuthService.clearCurrentWorkoutState(uid);
+    if (uid && email && typeof AuthService.clearCurrentWorkoutState === "function") {
+      AuthService.clearCurrentWorkoutState(uid, email);
     }
   }, [user, workouts]);
 
   const handleUpdateWorkouts = useCallback((updatedWorkouts) => {
     setWorkouts(updatedWorkouts);
     const uid = user?.uid;
-    if (uid && typeof AuthService.saveUserWorkouts === "function") {
-      AuthService.saveUserWorkouts(uid, updatedWorkouts);
+    const email = user?.email;
+    if (uid && email && typeof AuthService.saveUserWorkouts === "function") {
+      AuthService.saveUserWorkouts(uid, email, updatedWorkouts);
     }
   }, [user]);
 
   const handleLogout = useCallback(() => {
     const uid = user?.uid;
-    if (uid && typeof AuthService.clearCurrentWorkoutState === "function") {
-      AuthService.clearCurrentWorkoutState(uid);
+    const email = user?.email;
+    if (uid && email && typeof AuthService.clearCurrentWorkoutState === "function") {
+      AuthService.clearCurrentWorkoutState(uid, email);
     }
     if (typeof AuthService.logout === "function") {
       AuthService.logout();
@@ -207,6 +214,19 @@ function App() {
     );
   }
 
+  if (showProfilePage) {
+    return (
+      <ProfilePage 
+        user={user}
+        onBack={() => setShowProfilePage(false)}
+        onProfileSave={(updatedUser) => {
+          setUser(updatedUser);
+          setShowProfilePage(false);
+        }}
+      />
+    );
+  }
+
   return (
     <div className="app-container">
       <div className="app-header">
@@ -223,7 +243,11 @@ function App() {
               ref={profileBtnRef}
             >
               <div className="profile-btn-avatar">
-                {getAvatarInitial(user)}
+                {user && user.photo ? (
+                  <img src={user.photo} alt="Profile" className="profile-btn-avatar-image" />
+                ) : (
+                  getAvatarInitial(user)
+                )}
               </div>
             </button>
             <div ref={profileDropdownRef}>
@@ -232,6 +256,7 @@ function App() {
                 isOpen={showProfileDropdown}
                 onClose={() => setShowProfileDropdown(false)}
                 onLogout={handleLogout}
+                onProfileClick={() => setShowProfilePage(true)}
               />
             </div>
           </div>
