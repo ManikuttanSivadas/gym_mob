@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import ReactDOM from "react-dom";
+import AuthService from "../Auth/AuthService";
 
 // Helper: generate simple unique id for new sets
 function generateId() {
@@ -120,6 +121,44 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts }) {
   const [editingSets, setEditingSets] = useState([]);
   const [newSetWeight, setNewSetWeight] = useState("");
   const [newSetReps, setNewSetReps] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Subscribe to real-time workout updates from Firestore
+  useEffect(() => {
+    const currentUser = AuthService.getCurrentUser();
+    if (!currentUser) {
+      setIsLoading(false);
+      return;
+    }
+
+    const uid = currentUser.uid || currentUser.email;
+    if (!uid) {
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Subscribe to real-time updates
+      const unsubscribe = AuthService.subscribeToWorkouts(uid, (fetchedWorkouts) => {
+        setIsLoading(false);
+        setError(null);
+      });
+
+      return () => {
+        if (typeof unsubscribe === "function") {
+          unsubscribe();
+        }
+      };
+    } catch (err) {
+      setIsLoading(false);
+      setError("Failed to load workouts");
+      console.error("Error subscribing to workouts:", err);
+    }
+  }, []);
 
   const isEditingAnyExercise = !!editingExercise;
 
@@ -283,6 +322,21 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts }) {
           </button>
         </div>
       </div>
+
+      {/* Error message */}
+      {error && (
+        <div style={{ marginTop: 10, padding: 12, background: "rgba(239, 68, 68, 0.1)", borderRadius: 8, color: "var(--text-danger, #dc2626)" }}>
+          <p style={{ margin: 0 }}>{error}</p>
+        </div>
+      )}
+
+      {/* Loading state */}
+      {isLoading && (
+        <div style={{ marginTop: 10, padding: 20, textAlign: "center", color: "var(--text-muted)" }}>
+          <div className="loading-spinner" style={{ width: 32, height: 32, margin: "0 auto 8px" }}></div>
+          <p>Loading workouts...</p>
+        </div>
+      )}
 
       {/* month chips — simple text chips, no Clear all */}
       <div style={{ marginTop: 10, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>

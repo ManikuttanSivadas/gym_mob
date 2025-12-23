@@ -21,12 +21,6 @@ function App() {
   const [activeExercise, setActiveExercise] = useState(null);
   const [currentSets, setCurrentSets] = useState([]);
 
-  // helper — derive a stable key/name from user object safely
-  function getUsernameKey(u) {
-    if (!u) return null;
-    return u.username || u.name || u.displayName || u.email || u.uid || null;
-  }
-
   // helper — safe avatar initial
   function getAvatarInitial(u) {
     const src = (u && (u.name || u.username || u.displayName || u.email)) || "";
@@ -42,15 +36,15 @@ function App() {
     if (currentUser) {
       setUser(currentUser);
 
-      const key = getUsernameKey(currentUser);
-      // guard AuthService calls with a valid key
-      if (key && typeof AuthService.getUserWorkouts === "function") {
-        const userWorkouts = AuthService.getUserWorkouts(key) || [];
+      const uid = currentUser.uid;
+      // guard AuthService calls with a valid uid
+      if (uid && typeof AuthService.getUserWorkouts === "function") {
+        const userWorkouts = AuthService.getUserWorkouts(uid) || [];
         setWorkouts(userWorkouts);
       }
 
-      if (key && typeof AuthService.getCurrentWorkoutState === "function") {
-        const currentWorkoutState = AuthService.getCurrentWorkoutState(key);
+      if (uid && typeof AuthService.getCurrentWorkoutState === "function") {
+        const currentWorkoutState = AuthService.getCurrentWorkoutState(uid);
         if (currentWorkoutState) {
           setWorkoutName(currentWorkoutState.workoutName || "");
           setWorkoutExercises(currentWorkoutState.workoutExercises || []);
@@ -77,10 +71,10 @@ function App() {
 
   // persist current workout state when user changes or workout data changes
   useEffect(() => {
-    const key = getUsernameKey(user);
-    if (key && typeof AuthService.saveCurrentWorkoutState === "function") {
+    const uid = user?.uid;
+    if (uid && typeof AuthService.saveCurrentWorkoutState === "function") {
       const workoutState = { workoutName, workoutExercises, activeExercise, currentSets };
-      AuthService.saveCurrentWorkoutState(key, workoutState);
+      AuthService.saveCurrentWorkoutState(uid, workoutState);
     }
   }, [workoutName, workoutExercises, activeExercise, currentSets, user]);
 
@@ -109,17 +103,17 @@ function App() {
 
   function handleAuthSuccess(loggedInUser) {
     setUser(loggedInUser);
-    const key = getUsernameKey(loggedInUser);
+    const uid = loggedInUser.uid;
 
-    if (key && typeof AuthService.getUserWorkouts === "function") {
-      const userWorkouts = AuthService.getUserWorkouts(key) || [];
+    if (uid && typeof AuthService.getUserWorkouts === "function") {
+      const userWorkouts = AuthService.getUserWorkouts(uid) || [];
       setWorkouts(userWorkouts);
     } else {
       setWorkouts([]);
     }
 
-    if (key && typeof AuthService.getCurrentWorkoutState === "function") {
-      const currentWorkoutState = AuthService.getCurrentWorkoutState(key);
+    if (uid && typeof AuthService.getCurrentWorkoutState === "function") {
+      const currentWorkoutState = AuthService.getCurrentWorkoutState(uid);
       if (currentWorkoutState) {
         setWorkoutName(currentWorkoutState.workoutName || "");
         setWorkoutExercises(currentWorkoutState.workoutExercises || []);
@@ -137,27 +131,27 @@ function App() {
   function handleAddWorkout(workout) {
     const newWorkouts = [workout, ...workouts];
     setWorkouts(newWorkouts);
-    const key = getUsernameKey(user);
-    if (key && typeof AuthService.saveUserWorkouts === "function") {
-      AuthService.saveUserWorkouts(key, newWorkouts);
+    const uid = user?.uid;
+    if (uid && typeof AuthService.saveUserWorkouts === "function") {
+      AuthService.saveUserWorkouts(uid, newWorkouts);
     }
-    if (key && typeof AuthService.clearCurrentWorkoutState === "function") {
-      AuthService.clearCurrentWorkoutState(key);
+    if (uid && typeof AuthService.clearCurrentWorkoutState === "function") {
+      AuthService.clearCurrentWorkoutState(uid);
     }
   }
 
   function handleUpdateWorkouts(updatedWorkouts) {
     setWorkouts(updatedWorkouts);
-    const key = getUsernameKey(user);
-    if (key && typeof AuthService.saveUserWorkouts === "function") {
-      AuthService.saveUserWorkouts(key, updatedWorkouts);
+    const uid = user?.uid;
+    if (uid && typeof AuthService.saveUserWorkouts === "function") {
+      AuthService.saveUserWorkouts(uid, updatedWorkouts);
     }
   }
 
   function handleLogout() {
-    const key = getUsernameKey(user);
-    if (key && typeof AuthService.clearCurrentWorkoutState === "function") {
-      AuthService.clearCurrentWorkoutState(key);
+    const uid = user?.uid;
+    if (uid && typeof AuthService.clearCurrentWorkoutState === "function") {
+      AuthService.clearCurrentWorkoutState(uid);
     }
     if (typeof AuthService.logout === "function") {
       AuthService.logout();
