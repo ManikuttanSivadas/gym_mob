@@ -110,33 +110,27 @@
   position: absolute;
   top: 8px;
   right: 8px;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background: var(--btn-danger);
   color: white;
   border: none;
   cursor: pointer;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
-  opacity: 0;
-  transform: scale(0.8);
   padding: 0;
   box-shadow: var(--shadow-md);
-}
-
-.profile-photo-container:hover .profile-photo-remove-btn {
-  opacity: 1;
-  transform: scale(1);
 }
 
 .profile-photo-remove-btn:hover {
   background: var(--btn-danger-hover);
   transform: scale(1.1);
+  box-shadow: var(--shadow-lg);
 }
 
 .profile-photo-placeholder {
