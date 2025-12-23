@@ -306,31 +306,32 @@ export default function ProfilePage({ user, onBack, onProfileSave }) {
             </select>
           </div>
 
-          {/* Date of Birth */}
-          <div className="profile-form-group">
-            <label htmlFor="dob">Date of Birth</label>
-            <input
-              id="dob"
-              type="date"
-              name="dob"
-              value={formData.dob}
-              onChange={handleInputChange}
-              className="profile-input"
-            />
-          </div>
+          {/* Date of Birth & Age Row */}
+          <div className="profile-form-row">
+            <div className="profile-form-group">
+              <label htmlFor="dob">Date of Birth</label>
+              <input
+                id="dob"
+                type="date"
+                name="dob"
+                value={formData.dob}
+                onChange={handleInputChange}
+                className="profile-input"
+              />
+            </div>
 
-          {/* Age */}
-          <div className="profile-form-group">
-            <label htmlFor="age">Age</label>
-            <input
-              id="age"
-              type="number"
-              name="age"
-              value={formData.age}
-              onChange={handleInputChange}
-              placeholder="e.g., 25"
-              className="profile-input"
-            />
+            <div className="profile-form-group">
+              <label htmlFor="age">Age</label>
+              <input
+                id="age"
+                type="number"
+                name="age"
+                value={formData.age}
+                onChange={handleInputChange}
+                placeholder="e.g., 25"
+                className="profile-input"
+              />
+            </div>
           </div>
 
           {/* Height & Weight Row */}
