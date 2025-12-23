@@ -1,16 +1,36 @@
 import React, { useState, useEffect, useRef, memo } from 'react';
-
-// Helper function to generate unique IDs
-function generateId() {
-  return Date.now().toString() + Math.random().toString(36).substr(2, 9);
-}
+import Stopwatch from './Stopwatch';
+import '../styles/RestTimer.css';
 
 // ---- REST TIMER COMPONENT WITH STOPWATCH ---- //
 function RestTimerTab() {
   const [timerSubTab, setTimerSubTab] = useState(0); // 0 = Rest Timer, 1 = Stopwatch
+  const [touchStart, setTouchStart] = useState(0);
+
+  const handleTouchStart = (e) => {
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = (e) => {
+    const touchEnd = e.changedTouches[0].clientX;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe && timerSubTab === 0) {
+      setTimerSubTab(1); // Swipe left -> go to Stopwatch
+    }
+    if (isRightSwipe && timerSubTab === 1) {
+      setTimerSubTab(0); // Swipe right -> go to Rest Timer
+    }
+  };
 
   return (
-    <div className="tab-section">
+    <div 
+      className="tab-section"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
       <h2>Timer Tools</h2>
       
       {/* Timer Sub-Navigation */}
@@ -56,24 +76,26 @@ function RestTimer() {
   useEffect(() => {
     if (timer === 0 && running) {
       setRunning(false);
-      alert('Rest time completed. Ready for your next set.');
+      // Play a simple alert sound (if available)
+      if (typeof Audio !== 'undefined') {
+        try {
+          const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAAB9AAACABAAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj==');
+          audio.play().catch(() => {});
+        } catch (e) {}
+      }
     }
   }, [timer, running]);
 
-  function setTimerValue(seconds) {
-    setTimer(seconds);
-    setRunning(false);
-  }
 
-  function increaseTimer() {
+  function addMinute() {
     if (!running) {
-      setTimer(prev => prev + 15);
+      setTimer(prev => prev + 60);
     }
   }
 
-  function decreaseTimer() {
+  function subtractMinute() {
     if (!running && timer > 0) {
-      setTimer(prev => Math.max(0, prev - 15));
+      setTimer(prev => Math.max(0, prev - 60));
     }
   }
 
@@ -93,268 +115,77 @@ function RestTimer() {
   }
 
   const formatTimer = (seconds) => {
-    const mins = Math.floor(seconds / 60);
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  function getTimerColorClass() {
-    if (!running) return '';
-    
-    if (timer <= 5) {
-      return 'timer-critical';
-    } else if (timer <= 10) {
-      return 'timer-warning';
-    } else if (timer <= 30) {
-      return 'timer-caution';
-    }
-    return 'timer-normal';
-  }
-
   return (
-    <div className="timer-content">
-      <div className={`timer-display ${getTimerColorClass()}`}>
-        <button 
-          className="timer-adjust-btn timer-decrease" 
-          onClick={decreaseTimer}
-          disabled={running || timer <= 0}
-          title="Decrease by 15s"
+    <div className="rest-timer-container">
+      {/* Time Display */}
+      <div className="rest-timer-display-section">
+        <div className={`rest-timer-display ${running ? 'running' : ''}`}>
+          {formatTimer(timer)}
+        </div>
+      </div>
+
+      {/* Minute Adjustment Buttons */}
+      <div className="rest-timer-minute-controls">
+        <button
+          className="rest-timer-minute-btn"
+          onClick={subtractMinute}
+          disabled={running || timer === 0}
+          title="Subtract 1 minute"
         >
           −
         </button>
-        
-        <div className="timer-value">{formatTimer(timer)}</div>
-        
-        <button 
-          className="timer-adjust-btn timer-increase" 
-          onClick={increaseTimer}
+        <span className="rest-timer-minute-label">min</span>
+        <button
+          className="rest-timer-minute-btn"
+          onClick={addMinute}
           disabled={running}
-          title="Increase by 15s"
+          title="Add 1 minute"
         >
           +
         </button>
       </div>
 
-      <div className="timer-controls">
-        <h4 style={{width: '100%', textAlign: 'center', margin: '0 0 12px 0', color: 'var(--text-muted)'}}>
-          Quick Set
-        </h4>
-        {[30, 60, 90, 120, 180, 300].map(preset => (
-          <button 
-            key={preset} 
-            className="btn-secondary timer-preset-btn" 
-            onClick={() => setTimerValue(preset)}
-            disabled={running}
-          >
-            {preset < 60 ? `${preset}s` : `${preset/60}m`}
-          </button>
-        ))}
+      {/* Quick Preset Buttons */}
+      <div className="rest-timer-presets">
+        {[5, 10, 15, 30, 60, 120].map(seconds => {
+          const mins = seconds < 60 ? seconds : Math.round(seconds / 60);
+          const label = seconds < 60 ? `${seconds}s` : `${mins}m`;
+          return (
+            <button
+              key={seconds}
+              className="rest-timer-preset-btn"
+              onClick={() => {
+                setTimer(seconds);
+                setRunning(false);
+              }}
+              disabled={running}
+            >
+              {label}
+            </button>
+          );
+        })}
       </div>
 
-      <div className="timer-main-controls">
-        {!running ? (
-          <button 
-            className="btn-success timer-main-btn" 
-            onClick={startTimer}
-            disabled={timer <= 0}
-          >
-            {timer > 0 ? 'Start Timer' : 'Set time first'}
-          </button>
-        ) : (
-          <button 
-            className="btn-secondary timer-main-btn" 
-            onClick={pauseTimer}
-          >
-            Pause Timer
-          </button>
-        )}
-        
-        <button 
-          className="btn-danger timer-main-btn" 
-          onClick={resetTimer}
-          disabled={timer <= 0}
+      {/* Control Buttons */}
+      <div className="rest-timer-controls">
+        <button
+          className={`rest-timer-button ${running ? 'pause-button' : 'start-button'}`}
+          onClick={running ? pauseTimer : startTimer}
         >
-          Reset
+          {running ? 'Pause' : 'Start'}
         </button>
-      </div>
-
-      {timer > 0 && (
-        <div className={`timer-status ${getTimerColorClass()}`}>
-          <span className="timer-status-text">
-            {running ? 'Timer Running' : 'Timer Paused'} • {formatTimer(timer)} remaining
-            {timer <= 10 && running && <span className="timer-warning-text"> • Almost done</span>}
-          </span>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ---- STOPWATCH COMPONENT ---- //
-function Stopwatch() {
-  const [time, setTime] = useState(0);
-  const [running, setRunning] = useState(false);
-  const [laps, setLaps] = useState([]);
-  const intervalRef = useRef(null);
-
-  useEffect(() => {
-    if (running) {
-      intervalRef.current = setInterval(() => {
-        setTime(t => t + 10); // Update every 10ms for more precision
-      }, 10);
-    } else {
-      clearInterval(intervalRef.current);
-    }
-    return () => clearInterval(intervalRef.current);
-  }, [running]);
-
-  function startStopwatch() {
-    setRunning(true);
-  }
-
-  function stopStopwatch() {
-    setRunning(false);
-  }
-
-  function resetStopwatch() {
-    setTime(0);
-    setRunning(false);
-    // Don't clear laps on reset - only reset the timer
-  }
-
-  function clearAllLaps() {
-    setLaps([]);
-  }
-
-  function addLap() {
-    if (running && time > 0) {
-      const lapTime = time;
-      const lapNumber = laps.length + 1;
-      const prevLapTime = laps.length > 0 ? laps[laps.length - 1].lapTime : 0;
-      const splitTime = lapTime - prevLapTime;
-      
-      setLaps([...laps, {
-        id: generateId(),
-        lapNumber,
-        lapTime,
-        splitTime,
-        timestamp: new Date().toLocaleTimeString()
-      }]);
-    }
-  }
-
-  const formatStopwatchTime = (milliseconds) => {
-    const totalSeconds = Math.floor(milliseconds / 1000);
-    const mins = Math.floor(totalSeconds / 60);
-    const secs = totalSeconds % 60;
-    const ms = Math.floor((milliseconds % 1000) / 10);
-    return `${mins}:${secs.toString().padStart(2, '0')}.${ms.toString().padStart(2, '0')}`;
-  };
-
-  const formatLapTime = (milliseconds) => {
-    const totalSeconds = Math.floor(milliseconds / 1000);
-    const mins = Math.floor(totalSeconds / 60);
-    const secs = totalSeconds % 60;
-    const ms = Math.floor((milliseconds % 1000) / 10);
-    
-    if (mins > 0) {
-      return `${mins}:${secs.toString().padStart(2, '0')}.${ms.toString().padStart(2, '0')}`;
-    } else {
-      return `${secs}.${ms.toString().padStart(2, '0')}s`;
-    }
-  };
-
-  return (
-    <div className="timer-content">
-      <div className="stopwatch-display">
-        <div className="stopwatch-time">{formatStopwatchTime(time)}</div>
-      </div>
-
-      <div className="stopwatch-controls">
-        <div className="stopwatch-main-controls">
-          {!running ? (
-            <button 
-              className="btn-success stopwatch-btn" 
-              onClick={startStopwatch}
-            >
-              Start
-            </button>
-          ) : (
-            <button 
-              className="btn-secondary stopwatch-btn" 
-              onClick={stopStopwatch}
-            >
-              Stop
-            </button>
-          )}
-          
-          <button 
-            className="btn-primary stopwatch-btn" 
-            onClick={addLap}
-            disabled={!running || time === 0}
-          >
-            Flag
-          </button>
-          
-          <button 
-            className="btn-danger stopwatch-btn" 
-            onClick={resetStopwatch}
-            disabled={running}
-          >
+        {!running && timer > 0 && (
+          <button className="rest-timer-button reset-button" onClick={resetTimer}>
             Reset
           </button>
-        </div>
+        )}
       </div>
-
-      {time > 0 && (
-        <div className="stopwatch-status">
-          <span className="stopwatch-status-text">
-            {running ? 'Stopwatch Running' : 'Stopwatch Stopped'} • {formatStopwatchTime(time)}
-          </span>
-        </div>
-      )}
-
-      {laps.length > 0 && (
-        <div className="laps-section">
-          <div className="laps-header">
-            <h4>Lap Times</h4>
-            <button 
-              className="btn-danger clear-laps-btn" 
-              onClick={clearAllLaps}
-              title="Clear all lap times"
-            >
-              Clear All
-            </button>
-          </div>
-          
-          <div className="laps-list">
-            {laps.slice().reverse().map(lap => (
-              <div key={lap.id} className="lap-item">
-                <div className="lap-header">
-                  <span className="lap-number">Lap {lap.lapNumber}</span>
-                  <span className="lap-timestamp">{lap.timestamp}</span>
-                </div>
-                <div className="lap-times">
-                  <div className="lap-time-item">
-                    <span className="lap-time-label">Split:</span>
-                    <span className="lap-time-value">{formatLapTime(lap.splitTime)}</span>
-                  </div>
-                  <div className="lap-time-item">
-                    <span className="lap-time-label">Total:</span>
-                    <span className="lap-time-value">{formatLapTime(lap.lapTime)}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-          
-          {laps.length > 3 && (
-            <div className="laps-summary">
-              <p>Total laps: {laps.length} • Best split: {formatLapTime(Math.min(...laps.map(l => l.splitTime)))}</p>
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, memo } from 'react';
+import '../styles/Stopwatch.css';
 
 export default memo(function Stopwatch() {
   const [time, setTime] = useState(0);
@@ -28,6 +29,7 @@ export default memo(function Stopwatch() {
   function resetStopwatch() {
     setTime(0);
     setRunning(false);
+    setLaps([]);
   }
 
   function clearAllLaps() {
@@ -46,64 +48,71 @@ export default memo(function Stopwatch() {
 
   const formatStopwatchTime = (ms) => {
     const totalSeconds = Math.floor(ms / 1000);
-    const mins = Math.floor(totalSeconds / 60);
-    const secs = totalSeconds % 60;
-    const centis = Math.floor((ms % 1000) / 10);
-    return `${mins}:${secs.toString().padStart(2,'0')}.${centis.toString().padStart(2,'0')}`;
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    const milliseconds = Math.floor((ms % 1000) / 10);
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(2, '0')}`;
   };
 
   return (
-    <div className="timer-content">
-      <div className="stopwatch-display">
-        <div className="stopwatch-time">{formatStopwatchTime(time)}</div>
-      </div>
-
-      <div className="stopwatch-controls">
-        <div className="stopwatch-main-controls">
-          {!running ? (
-            <button className="btn-success stopwatch-btn" onClick={startStopwatch}>Start</button>
-          ) : (
-            <button className="btn-secondary stopwatch-btn" onClick={stopStopwatch}>Stop</button>
-          )}
-          <button className="btn-primary stopwatch-btn" onClick={addLap} disabled={!running || time === 0}>Flag</button>
-          <button className="btn-danger stopwatch-btn" onClick={resetStopwatch} disabled={running}>Reset</button>
+    <div className="stopwatch-container">
+      {/* Large Time Display */}
+      <div className="stopwatch-display-section">
+        <div className={`stopwatch-time-display ${running ? 'running' : ''}`}>
+          {formatStopwatchTime(time)}
         </div>
       </div>
 
-      {time > 0 && (
-        <div className="stopwatch-status">
-          <span className="stopwatch-status-text">
-            {running ? 'Stopwatch Running' : 'Stopwatch Stopped'} • {formatStopwatchTime(time)}
-          </span>
-        </div>
-      )}
+      {/* Control Buttons */}
+      <div className="stopwatch-buttons-section">
+        <button
+          className={`stopwatch-button ${running ? 'stop-button' : 'start-button'}`}
+          onClick={running ? stopStopwatch : startStopwatch}
+        >
+          {running ? 'Stop' : 'Start'}
+        </button>
+        {running && (
+          <button
+            className="stopwatch-button lap-button"
+            onClick={addLap}
+            disabled={!running || time === 0}
+          >
+            Lap
+          </button>
+        )}
+        {!running && time > 0 && (
+          <button className="stopwatch-button reset-button-inline" onClick={resetStopwatch}>
+            Reset
+          </button>
+        )}
+      </div>
 
+      {/* Laps List */}
       {laps.length > 0 && (
-        <div className="laps-section">
-          <div className="laps-header">
-            <h4>Lap Times</h4>
-            <button className="btn-danger clear-laps-btn" onClick={clearAllLaps}>Clear All</button>
-          </div>
-          <div className="laps-list">
-            {laps.slice().reverse().map(lap => (
-              <div key={lap.id} className="lap-item">
-                <div className="lap-header">
-                  <span className="lap-number">Lap {lap.lapNumber}</span>
-                  <span className="lap-timestamp">{new Date().toLocaleTimeString()}</span>
-                </div>
-                <div className="lap-times">
-                  <div className="lap-time-item">
-                    <span className="lap-time-label">Split:</span>
-                    <span className="lap-time-value">{formatStopwatchTime(lap.splitTime)}</span>
+        <div className="stopwatch-laps-section">
+          <div className="laps-scroll">
+            {laps.slice().reverse().map((lap, index) => {
+              return (
+                <div
+                  key={lap.id}
+                  className="lap-row"
+                >
+                  <div className="lap-number-container">
+                    <span className="lap-number">Lap {laps.length - index}</span>
                   </div>
-                  <div className="lap-time-item">
-                    <span className="lap-time-label">Total:</span>
-                    <span className="lap-time-value">{formatStopwatchTime(lap.lapTime)}</span>
+                  <div className="lap-time-values">
+                    <span className="lap-split-time">{formatStopwatchTime(lap.splitTime)}</span>
+                    <span className="lap-total-time">{formatStopwatchTime(lap.lapTime)}</span>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
+          {laps.length > 0 && (
+            <button className="clear-all-button" onClick={clearAllLaps}>
+              Clear All
+            </button>
+          )}
         </div>
       )}
     </div>

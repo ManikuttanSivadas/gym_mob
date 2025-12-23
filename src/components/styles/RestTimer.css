@@ -1,0 +1,426 @@
+/* Timer Tabs Slider Navigation */
+.timer-tabs-indicator {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 24px 0;
+  margin-bottom: 16px;
+}
+
+.timer-tabs-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.timer-sub-btn {
+  flex: 1;
+  padding: 10px 16px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+}
+
+.timer-sub-btn:hover {
+  color: var(--text-primary);
+}
+
+.timer-sub-btn.active {
+  color: var(--text-accent);
+}
+
+.timer-tabs-indicator-line {
+  height: 3px;
+  background: var(--bg-tertiary);
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+}
+
+.indicator-slider {
+  height: 100%;
+  background: var(--btn-primary);
+  border-radius: 2px;
+  width: 50%;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.indicator-slider.timer-side {
+  transform: translateX(0);
+}
+
+.indicator-slider.stopwatch-side {
+  transform: translateX(100%);
+}
+
+/* Timer Content Slider */
+.timer-content-slider {
+  display: flex;
+  position: relative;
+  overflow: hidden;
+  touch-action: pan-y;
+  width: 100%;
+  min-height: 500px;
+}
+
+.timer-slide {
+  flex: 0 0 100%;
+  width: 100%;
+  min-height: 500px;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.timer-slide.active {
+  opacity: 1;
+  pointer-events: auto;
+  visibility: visible;
+}
+
+/* Rest Timer Container */
+.rest-timer-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  padding: 20px;
+  gap: 16px;
+  transition: all 0.2s ease;
+}
+
+/* Time Display Section */
+.rest-timer-display-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+  padding: 30px 0;
+  gap: 20px;
+}
+
+.rest-timer-display {
+  font-size: 64px;
+  font-weight: 300;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+  letter-spacing: -1px;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  transition: all 0.1s ease;
+  text-align: center;
+  line-height: 1;
+  min-width: 160px;
+}
+
+.rest-timer-display.running {
+  animation: timer-pulse 0.6s ease-in-out infinite;
+}
+
+@keyframes timer-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Hour Adjust Group */
+.rest-timer-adjust-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.rest-timer-unit {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Adjust Buttons */
+.rest-timer-adjust-btn {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: none;
+  font-size: 24px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.rest-timer-adjust-btn:hover:not(:disabled) {
+  background: var(--bg-accent);
+  box-shadow: var(--shadow-md);
+  transform: scale(1.05);
+}
+
+.rest-timer-adjust-btn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.rest-timer-adjust-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Minute Controls */
+.rest-timer-minute-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  padding: 0 20px;
+}
+
+.rest-timer-minute-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  font-size: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.rest-timer-minute-btn:hover:not(:disabled) {
+  background: var(--bg-accent);
+  box-shadow: var(--shadow-md);
+  transform: scale(1.05);
+}
+
+.rest-timer-minute-btn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.rest-timer-minute-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.rest-timer-minute-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  min-width: 30px;
+  text-align: center;
+}
+
+/* Preset Buttons - Compact */
+.rest-timer-presets {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  padding: 0;
+}
+
+.rest-timer-preset-btn {
+  padding: 8px 6px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.rest-timer-preset-btn:hover:not(:disabled) {
+  background: var(--bg-accent);
+  border-color: var(--border-accent);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.rest-timer-preset-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.rest-timer-preset-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Control Buttons */
+.rest-timer-controls {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  padding: 0 20px;
+}
+
+.rest-timer-button {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  border: none;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-md);
+}
+
+.rest-timer-button:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.rest-timer-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Start Button - Green */
+.start-button {
+  background: var(--btn-success);
+  color: white;
+}
+
+.start-button:hover:not(:disabled) {
+  background: var(--btn-success-hover);
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.4);
+}
+
+/* Pause Button - Yellow/Primary */
+.pause-button {
+  background: var(--btn-primary);
+  color: white;
+}
+
+.pause-button:hover:not(:disabled) {
+  background: var(--btn-primary-hover);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+}
+
+/* Reset Button - Red */
+.reset-button {
+  background: var(--btn-danger);
+  color: white;
+}
+
+.reset-button:hover:not(:disabled) {
+  background: var(--btn-danger-hover);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+}
+
+/* Dark Mode Support */
+[data-theme="dark"] .rest-timer-container {
+  background: var(--bg-secondary);
+}
+
+[data-theme="dark"] .rest-timer-display {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .rest-timer-adjust-btn,
+[data-theme="dark"] .rest-timer-minute-btn {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .rest-timer-adjust-btn:hover:not(:disabled),
+[data-theme="dark"] .rest-timer-minute-btn:hover:not(:disabled) {
+  background: rgba(37, 99, 235, 0.2);
+}
+
+[data-theme="dark"] .rest-timer-preset-btn {
+  background: var(--bg-tertiary);
+  border-color: var(--border-light);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .rest-timer-preset-btn:hover:not(:disabled) {
+  background: rgba(37, 99, 235, 0.15);
+  border-color: var(--border-accent);
+}
+
+/* Mobile Responsive Design */
+@media (max-width: 480px) {
+  .rest-timer-container {
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .rest-timer-display-section {
+    padding: 20px 0;
+    gap: 16px;
+  }
+
+  .rest-timer-display {
+    font-size: 52px;
+    min-width: 140px;
+  }
+
+  .rest-timer-adjust-btn {
+    width: 44px;
+    height: 44px;
+    font-size: 20px;
+  }
+
+  .rest-timer-presets {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  .rest-timer-preset-btn {
+    padding: 8px 4px;
+    font-size: 11px;
+  }
+
+  .rest-timer-button {
+    width: 60px;
+    height: 60px;
+    font-size: 14px;
+  }
+
+  .rest-timer-controls {
+    gap: 12px;
+  }
+}
+
+@media (max-width: 360px) {
+  .rest-timer-display {
+    font-size: 44px;
+  }
+
+  .rest-timer-button {
+    width: 54px;
+    height: 54px;
+    font-size: 12px;
+  }
+
+  .rest-timer-adjust-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+}

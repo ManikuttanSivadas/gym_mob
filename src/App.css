@@ -2232,71 +2232,6 @@ button {
   color: var(--text-accent);
 }
 
-/* STOPWATCH STYLES */
-.stopwatch-display {
-  text-align: center;
-  margin: 32px 0;
-  padding: 32px 24px;
-  background: var(--bg-tertiary);
-  border-radius: 16px;
-  border: 1px solid var(--border-light);
-  box-shadow: var(--shadow-sm);
-}
-
-.stopwatch-time {
-  font-size: 56px;
-  font-weight: 300;
-  color: var(--text-accent);
-  font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
-  letter-spacing: -0.05em;
-  line-height: 1;
-}
-
-.stopwatch-controls {
-  margin-bottom: 24px;
-}
-
-.stopwatch-main-controls {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  margin-bottom: 16px;
-}
-
-.stopwatch-btn {
-  flex: 1;
-  max-width: 120px;
-  padding: 16px 20px;
-  font-size: 16px;
-  font-weight: 600;
-  border-radius: 10px;
-}
-
-.stopwatch-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.stopwatch-btn:disabled:hover {
-  transform: none;
-}
-
-.stopwatch-status {
-  text-align: center;
-  padding: 12px 16px;
-  background: rgba(37, 99, 235, 0.1);
-  border: 1px solid rgba(37, 99, 235, 0.2);
-  border-radius: 8px;
-  margin-bottom: 24px;
-}
-
-.stopwatch-status-text {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-accent);
-}
-
 /* UPDATED LAPS SECTION WITH CLEAR BUTTON */
 .laps-section {
   background: var(--bg-card);
@@ -2653,10 +2588,6 @@ footer {
 
 [data-theme="dark"] .timer-display.timer-critical {
   background: linear-gradient(135deg, rgba(220, 38, 38, 0.25), var(--bg-tertiary));
-}
-
-[data-theme="dark"] .stopwatch-display {
-  background: var(--bg-accent);
 }
 
 [data-theme="dark"] .lap-item {
