@@ -125,13 +125,59 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts, isLoading = false })
   const [editingSets, setEditingSets] = useState([]);
   const [newSetWeight, setNewSetWeight] = useState("");
   const [newSetReps, setNewSetReps] = useState("");
-  const [error, setError] = useState(null);
+
+  // calendar view state with localStorage persistence
+  const [showCalendarView, setShowCalendarView] = useState(() => {
+    const saved = localStorage.getItem('viewWorkouts_showCalendarView');
+    return saved ? JSON.parse(saved) : false;
+  });
+  const [calendarMonth, setCalendarMonth] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [expandedCalendarWorkouts, setExpandedCalendarWorkouts] = useState([]);
+
+  // persist showCalendarView to localStorage
+  useEffect(() => {
+    localStorage.setItem('viewWorkouts_showCalendarView', JSON.stringify(showCalendarView));
+  }, [showCalendarView]);
 
   const isEditingAnyExercise = !!editingExercise;
 
   function getTodayMonth() {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+  }
+
+  // calendar helpers
+  function getDaysInMonth(date) {
+    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+  }
+
+  function getFirstDayOfMonth(date) {
+    return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+  }
+
+  function getWorkoutsByDate() {
+    const map = {};
+    workouts.forEach(w => {
+      const dateStr = w.workoutDate || (w.date || "").split("T")[0];
+      if (dateStr) {
+        if (!map[dateStr]) map[dateStr] = [];
+        map[dateStr].push(w);
+      }
+    });
+    return map;
+  }
+
+  function hasWorkoutOnDate(date) {
+    const dateStr = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`;
+    const workoutsByDate = getWorkoutsByDate();
+    return dateStr in workoutsByDate;
+  }
+
+  function getWorkoutsForDate(date) {
+    const dateStr = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`;
+    const workoutsByDate = getWorkoutsByDate();
+    return workoutsByDate[dateStr] || [];
   }
 
   function getMinFilterMonth() {
@@ -276,11 +322,106 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts, isLoading = false })
   function removeMonthChip(ym) { setFilterMonths(prev => prev.filter(m => m !== ym)); }
   function clearAllMonths() { setFilterMonths([]); } // not used (no clear all button)
 
+  // calendar navigation
+  function goToPreviousMonth() {
+    setCalendarMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
+  }
+
+  function goToNextMonth() {
+    setCalendarMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
+  }
+
+  function goToToday() {
+    setCalendarMonth(new Date());
+  }
+
+  function toggleCalendarWorkoutExpand(workoutId) {
+    setExpandedCalendarWorkouts(prev => 
+      prev.includes(workoutId) ? prev.filter(id => id !== workoutId) : [...prev, workoutId]
+    );
+  }
+
+  function handleDateClick(dateStr, hasWorkout) {
+    if (!hasWorkout) return;
+    setSelectedDate(prev => {
+      const newDate = prev === dateStr ? null : dateStr;
+      return newDate;
+    });
+  }
+
+  function toggleCalendarView() {
+    setShowCalendarView(prev => !prev);
+    setSelectedDate(null);
+  }
+
+  // render calendar grid
+  function renderCalendarGrid() {
+    const daysInMonth = getDaysInMonth(calendarMonth);
+    const firstDay = getFirstDayOfMonth(calendarMonth);
+    const days = [];
+
+    // empty cells for days before month starts
+    for (let i = 0; i < firstDay; i++) {
+      days.push(<div key={`empty-${i}`} style={{ padding: 8 }}></div>);
+    }
+
+    // days of month
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), day);
+      const hasWorkout = hasWorkoutOnDate(date);
+      const dateStr = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`;
+      const isSelected = selectedDate === dateStr;
+
+      days.push(
+        <button
+          key={day}
+          type="button"
+          onClick={() => handleDateClick(dateStr, hasWorkout)}
+          style={{
+            padding: 12,
+            border: "none",
+            borderRadius: 50,
+            background: hasWorkout ? "#ef4444" : "transparent",
+            color: hasWorkout ? "white" : "var(--text-primary)",
+            cursor: hasWorkout ? "pointer" : "default",
+            fontWeight: 500,
+            fontSize: 13,
+            minHeight: 44,
+            transition: "all 0.2s ease",
+            opacity: isSelected ? 1 : 0.9,
+            outline: isSelected && hasWorkout ? "1.5px solid rgba(239, 68, 68, 0.6)" : "none",
+            outlineOffset: isSelected && hasWorkout ? "2px" : "0px",
+          }}
+          disabled={!hasWorkout}
+        >
+          {day}
+        </button>
+      );
+    }
+
+    return days;
+  }
+
   return (
     <div className="tab-section" style={{ padding: 12 }}>
       <div className="history-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
         <h2 style={{ margin: 0 }}>Workout History</h2>
         <div className="history-controls" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <button
+            type="button"
+            className="filter-icon-btn"
+            title={showCalendarView ? "List view" : "Calendar view"}
+            aria-label={showCalendarView ? "List view" : "Calendar view"}
+            onClick={toggleCalendarView}
+            style={{ width: 40, height: 40, borderRadius: 10, padding: 6, background: showCalendarView ? "rgba(239, 68, 68, 0.1)" : "transparent", border: "none" }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--text-primary)" }}>
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
+          </button>
           <button
             className="filter-icon-btn"
             title="Filter by month"
@@ -298,18 +439,151 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts, isLoading = false })
         </div>
       </div>
 
-      {/* Error message */}
-      {error && (
-        <div style={{ marginTop: 10, padding: 12, background: "rgba(239, 68, 68, 0.1)", borderRadius: 8, color: "var(--text-danger, #dc2626)" }}>
-          <p style={{ margin: 0 }}>{error}</p>
-        </div>
-      )}
-
       {/* Loading state */}
       {isLoading && (
         <div style={{ marginTop: 10, padding: 20, textAlign: "center", color: "var(--text-muted)" }}>
           <div className="loading-spinner" style={{ width: 32, height: 32, margin: "0 auto 8px" }}></div>
           <p>Loading workouts...</p>
+        </div>
+      )}
+
+      {/* Calendar View */}
+      {showCalendarView && (
+        <div style={{ marginTop: 16, padding: 16, background: "rgba(0,0,0,0.02)", borderRadius: 12 }}>
+          {/* Calendar Header */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <button
+              type="button"
+              onClick={goToPreviousMonth}
+              style={{ background: "transparent", border: "none", cursor: "pointer", fontSize: 20, color: "var(--text-primary)" }}
+              title="Previous month"
+            >
+              ‹
+            </button>
+            <div style={{ textAlign: "center", flex: 1 }}>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 600 }}>
+                {calendarMonth.toLocaleDateString(undefined, { month: "long", year: "numeric" })}
+              </h3>
+            </div>
+            <button
+              type="button"
+              onClick={goToNextMonth}
+              style={{ background: "transparent", border: "none", cursor: "pointer", fontSize: 20, color: "var(--text-primary)" }}
+              title="Next month"
+            >
+              ›
+            </button>
+          </div>
+
+          {/* Today button */}
+          <div style={{ textAlign: "center", marginBottom: 12 }}>
+            <button
+              type="button"
+              onClick={goToToday}
+              style={{
+                background: "var(--primary-color, #3b82f6)",
+                color: "white",
+                border: "none",
+                borderRadius: 6,
+                padding: "6px 12px",
+                cursor: "pointer",
+                fontSize: 12,
+                fontWeight: 600,
+              }}
+            >
+              Today
+            </button>
+          </div>
+
+          {/* Weekday headers */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 8, marginBottom: 8 }}>
+            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(day => (
+              <div key={day} style={{ textAlign: "center", fontWeight: 600, fontSize: 12, color: "var(--text-muted)", padding: 8 }}>
+                {day}
+              </div>
+            ))}
+          </div>
+
+          {/* Calendar Grid */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 8, marginBottom: 12 }}>
+            {renderCalendarGrid()}
+          </div>
+
+          {/* Legend */}
+          <div style={{ fontSize: 12, color: "var(--text-muted)", textAlign: "center" }}>
+            <span style={{ display: "inline-block", width: 12, height: 12, borderRadius: 4, background: "#ef4444", marginRight: 6 }}></span>
+            Workout recorded
+          </div>
+        </div>
+      )}
+
+      {/* Show selected date workouts when calendar is active */}
+      {showCalendarView && selectedDate && (
+        <div style={{ marginTop: 16 }}>
+          <h3 style={{ margin: "0 0 12px 0", color: "var(--text-primary)", fontSize: 16, fontWeight: 600 }}>Workouts on {new Date(selectedDate).toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}</h3>
+          <ul className="workout-list" style={{ padding: 0, margin: 0, listStyle: "none" }}>
+            {getWorkoutsForDate(new Date(selectedDate)).map(workout => {
+              const isExpanded = expandedCalendarWorkouts.includes(workout.id);
+              return (
+                <li key={workout.id} className="workout-item" style={{ marginBottom: 12 }}>
+                  <div className="workout-header" style={{ display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center", gap: 12, cursor: "pointer" }} onClick={() => toggleCalendarWorkoutExpand(workout.id)}>
+                    <div className="workout-name-badge" style={{ textAlign: "left", background: "transparent", padding: 0, borderRadius: 0 }}>
+                      <div className="workout-name-text" style={{ fontSize: 16, fontWeight: 600, color: "var(--text-primary)" }}>{workout.name || "Workout"}</div>
+                      <div className="workout-date-info" style={{ marginTop: 6 }}>
+                        <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                          {(workout.exercises || []).length} exercises • {(workout.exercises || []).reduce((total, ex) => total + (ex.sets || []).length, 0)} sets
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      className="btn-icon"
+                      onClick={() => toggleCalendarWorkoutExpand(workout.id)}
+                      aria-expanded={isExpanded}
+                      title={isExpanded ? "Collapse" : "View"}
+                      style={{ width: 40, height: 40, borderRadius: 8, padding: 6, background: "transparent", border: "none", color: "var(--text-primary)" }}
+                    >
+                      {isExpanded ? (
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--text-primary)" }}>
+                          <polyline points="18 15 12 9 6 15" />
+                        </svg>
+                      ) : (
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--text-primary)" }}>
+                          <polyline points="6 9 12 15 18 9" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+
+                  {isExpanded && (
+                    <div style={{ marginTop: 12 }}>
+                      {(workout.exercises || []).length === 0 ? (
+                        <div style={{ color: "var(--text-muted)", fontSize: 12, padding: "8px 0" }}>No exercises recorded</div>
+                      ) : (
+                        <>
+                          {(workout.exercises || []).map(exercise => (
+                            <div key={exercise.id} className="exercise-item" style={{ marginBottom: 12, padding: 12, background: "var(--bg-secondary, rgba(0,0,0,0.02))", borderRadius: 8 }}>
+                              <div className="exercise-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                                <h4 style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>{exercise.name}</h4>
+                              </div>
+                              <ul className="sets-list" style={{ listStyle: "none", padding: 0, margin: 0 }}>
+                                {(exercise.sets || []).map((s, i) => (
+                                  <li key={s.id} style={{ fontSize: 12, color: "var(--text-muted)", padding: "4px 0" }}>
+                                    Set {i+1} • {s.weight} kg × {s.reps} reps
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          ))}
+                        </>
+                      )}
+                    </div>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
         </div>
       )}
 
@@ -325,7 +599,7 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts, isLoading = false })
             ))}
           </>
         ) : (
-          <div style={{ color: "var(--text-muted)", fontSize: 14 }}>Showing all workouts</div>
+           !showCalendarView && <div style={{ color: "var(--text-muted)", fontSize: 14 }}>Showing all workouts</div>
         )}
       </div>
 
@@ -341,7 +615,7 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts, isLoading = false })
       )}
 
       {/* filter summary */}
-      {filterMonths && filterMonths.length > 0 && (
+      {!showCalendarView && filterMonths && filterMonths.length > 0 && (
         <div className={`filter-results-summary ${filteredWorkouts.length === 0 ? "filter-results-empty" : ""}`} style={{ marginTop: 12 }}>
           {filteredWorkouts.length === 0 ? (
             <div>No workouts for selected month(s). <button className="link-btn" onClick={() => setFilterMonths([])}>Show all</button></div>
@@ -351,11 +625,12 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts, isLoading = false })
         </div>
       )}
 
-      {filteredWorkouts.length === 0 && (!filterMonths || filterMonths.length === 0) && (
+      {!showCalendarView && filteredWorkouts.length === 0 && (!filterMonths || filterMonths.length === 0) && (
         <p style={{ color: "var(--text-muted)", textAlign: "center", padding: "28px 0" }}>No workouts logged yet.</p>
       )}
 
-      <ul className="workout-list" style={{ padding: 0, margin: "12px 0 0 0", listStyle: "none" }}>
+      {!showCalendarView && (
+        <ul className="workout-list" style={{ padding: 0, margin: "12px 0 0 0", listStyle: "none" }}>
         {filteredWorkouts.map(workout => {
           const isExpanded = expandedWorkouts.includes(workout.id) || (editingExercise && editingExercise.workoutId === workout.id);
           return (
@@ -513,6 +788,7 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts, isLoading = false })
           );
         })}
       </ul>
+      )}
 
       {showDeleteModal && (
         <div className="modal-overlay" onClick={handleCancelDelete}>

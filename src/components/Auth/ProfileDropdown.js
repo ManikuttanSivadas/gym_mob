@@ -50,6 +50,7 @@ export default function ProfileDropdown({ user, onLogout, onClose, isOpen, onPro
         {/* Profile Tab */}
         <div className="profile-dropdown-profile-tab">
           <button
+            type="button"
             className="profile-dropdown-item"
             onClick={() => {
               onProfileClick && onProfileClick();
@@ -64,6 +65,7 @@ export default function ProfileDropdown({ user, onLogout, onClose, isOpen, onPro
         <div className="profile-dropdown-know-us-tab">
           {/* Header toggles visibility */}
           <button
+            type="button"
             className="profile-dropdown-know-us-header"
             onClick={() => setKnowUsOpen((open) => !open)}
             aria-expanded={knowUsOpen}
@@ -93,6 +95,7 @@ export default function ProfileDropdown({ user, onLogout, onClose, isOpen, onPro
         {/* Sign Out Button */}
         <div className="profile-dropdown-actions">
           <button
+            type="button"
             className="profile-dropdown-item signout-btn"
             onClick={onLogout}
           >
