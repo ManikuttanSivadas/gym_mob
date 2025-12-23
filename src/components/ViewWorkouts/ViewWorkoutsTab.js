@@ -125,6 +125,9 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts, isLoading = false })
   const [editingSets, setEditingSets] = useState([]);
   const [newSetWeight, setNewSetWeight] = useState("");
   const [newSetReps, setNewSetReps] = useState("");
+  const [editingWorkout, setEditingWorkout] = useState(null);
+  const [editWorkoutName, setEditWorkoutName] = useState("");
+  const [editingWorkoutData, setEditingWorkoutData] = useState(null);
 
   // calendar view state with localStorage persistence
   const [showCalendarView, setShowCalendarView] = useState(() => {
@@ -290,6 +293,34 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts, isLoading = false })
     setEditingExercise(null); setEditExerciseName(""); setEditingSets([]); setNewSetWeight(""); setNewSetReps("");
   }
 
+  function handleEditWorkout(workoutId, workoutName) {
+    const workout = workouts.find(w => w.id === workoutId);
+    setEditingWorkout(workoutId);
+    setEditWorkoutName(workoutName || "");
+    setEditingWorkoutData(JSON.parse(JSON.stringify(workout)));
+  }
+
+  function handleSaveWorkoutChanges() {
+    if (!editingWorkout || !editingWorkoutData) return;
+    if (!editWorkoutName.trim()) { alert("Enter workout name."); return; }
+    if (!editingWorkoutData.exercises || editingWorkoutData.exercises.length === 0) { 
+      alert("Add at least one exercise."); 
+      return; 
+    }
+    // Save the edited workout data with updated name
+    const updated = workouts.map(w => w.id === editingWorkout ? { ...editingWorkoutData, name: editWorkoutName.trim() } : w);
+    onUpdateWorkouts && onUpdateWorkouts(updated);
+    setEditingWorkout(null);
+    setEditWorkoutName("");
+    setEditingWorkoutData(null);
+  }
+
+  function handleCancelWorkoutEdit() {
+    setEditingWorkout(null);
+    setEditWorkoutName("");
+    setEditingWorkoutData(null);
+  }
+
   // delete flows
   function handleDeleteExercise(workoutId, exerciseId, exerciseName) {
     setDeleteTarget({ type: "exercise", workoutId, exerciseId, exerciseName });
@@ -427,8 +458,8 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts, isLoading = false })
             title="Filter by month"
             aria-label="Filter by month"
             onClick={openMonthModal}
-            disabled={isEditingAnyExercise}
-            style={{ width: 40, height: 40, borderRadius: 10, padding: 6, background: "transparent", border: "none" }}
+            disabled={isEditingAnyExercise || showCalendarView}
+            style={{ width: 40, height: 40, borderRadius: 10, padding: 6, background: "transparent", border: "none", opacity: showCalendarView ? 0.5 : 1, cursor: showCalendarView ? "not-allowed" : "pointer" }}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--text-primary)" }}>
               <path d="M3 5h18" />
@@ -526,7 +557,7 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts, isLoading = false })
               const isExpanded = expandedCalendarWorkouts.includes(workout.id);
               return (
                 <li key={workout.id} className="workout-item" style={{ marginBottom: 12 }}>
-                  <div className="workout-header" style={{ display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center", gap: 12, cursor: "pointer" }} onClick={() => toggleCalendarWorkoutExpand(workout.id)}>
+                  <div className="workout-header" style={{ display: "grid", gridTemplateColumns: "1fr auto auto", alignItems: "center", gap: 12, cursor: "pointer" }} onClick={() => toggleCalendarWorkoutExpand(workout.id)}>
                     <div className="workout-name-badge" style={{ textAlign: "left", background: "transparent", padding: 0, borderRadius: 0 }}>
                       <div className="workout-name-text" style={{ fontSize: 16, fontWeight: 600, color: "var(--text-primary)" }}>{workout.name || "Workout"}</div>
                       <div className="workout-date-info" style={{ marginTop: 6 }}>
@@ -538,8 +569,27 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts, isLoading = false })
 
                     <button
                       type="button"
+                      className="btn-edit"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEditWorkout(workout.id, workout.name);
+                      }}
+                      title="Edit workout"
+                      style={{ width: 40, height: 40, borderRadius: 8, padding: 6, background: "transparent", border: "none", color: "var(--text-primary)" }}
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--text-primary)" }}>
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                      </svg>
+                    </button>
+
+                    <button
+                      type="button"
                       className="btn-icon"
-                      onClick={() => toggleCalendarWorkoutExpand(workout.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleCalendarWorkoutExpand(workout.id);
+                      }}
                       aria-expanded={isExpanded}
                       title={isExpanded ? "Collapse" : "View"}
                       style={{ width: 40, height: 40, borderRadius: 8, padding: 6, background: "transparent", border: "none", color: "var(--text-primary)" }}
@@ -651,6 +701,22 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts, isLoading = false })
 
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
                   <button
+                    type="button"
+                    className="btn-edit"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditWorkout(workout.id, workout.name);
+                    }}
+                    title="Edit workout"
+                    style={{ width: 40, height: 40, borderRadius: 8, padding: 6, background: "transparent", border: "none", color: "var(--text-primary)" }}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--text-primary)" }}>
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
                     className="btn-icon"
                     onClick={() => toggleWorkoutExpand(workout.id)}
                     aria-expanded={isExpanded}
@@ -803,6 +869,395 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts, isLoading = false })
             <div className="modal-actions">
               <button className="btn-modal-secondary" onClick={handleCancelDelete}>Cancel</button>
               <button className="btn-modal-primary" onClick={handleConfirmDelete}>{deleteTarget?.type === "workout" ? "Delete Workout" : "Delete Exercise"}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal for Calendar View */}
+      {showCalendarView && editingExercise && (
+        <div className="modal-overlay" onClick={handleCancelExerciseEdit}>
+          <div className="modal-container" onClick={e => e.stopPropagation()} style={{ maxHeight: "80vh", overflowY: "auto" }}>
+            <div className="modal-header">
+              <h3>{editingExercise.exerciseId ? "Edit Exercise" : "Add New Exercise"}</h3>
+            </div>
+            <div style={{ padding: 16 }}>
+              {/* Show existing exercises if not editing one */}
+              {!editingExercise.exerciseId && getWorkoutsForDate(new Date(selectedDate)).find(w => w.id === editingExercise.workoutId)?.exercises && (
+                <div style={{ marginBottom: 16, maxHeight: 300, overflowY: "auto" }}>
+                  <h4 style={{ marginBottom: 12, color: "var(--text-primary)" }}>Existing Exercises - Click to Edit</h4>
+                  {getWorkoutsForDate(new Date(selectedDate)).find(w => w.id === editingExercise.workoutId)?.exercises?.map(exercise => (
+                    <button
+                      key={exercise.id}
+                      type="button"
+                      onClick={() => handleEditExercise(editingExercise.workoutId, exercise)}
+                      style={{ 
+                        width: "100%",
+                        padding: 12, 
+                        background: "var(--bg-secondary)", 
+                        borderRadius: 8, 
+                        marginBottom: 8, 
+                        cursor: "pointer",
+                        border: "1px solid var(--border-light)",
+                        textAlign: "left",
+                        transition: "all 0.2s ease"
+                      }}
+                      onMouseOver={(e) => e.target.style.background = "rgba(239, 68, 68, 0.1)"}
+                      onMouseOut={(e) => e.target.style.background = "var(--bg-secondary)"}
+                    >
+                      <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)", marginBottom: 4 }}>
+                        {exercise.name}
+                      </div>
+                      <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                        {(exercise.sets || []).length} sets • Click to edit
+                      </div>
+                    </button>
+                  ))}
+                  <button 
+                    type="button"
+                    onClick={() => setEditingExercise({ workoutId: editingExercise.workoutId, exerciseId: null })}
+                    style={{
+                      width: "100%",
+                      padding: 10,
+                      background: "var(--primary-color, #3b82f6)",
+                      color: "white",
+                      border: "none",
+                      borderRadius: 8,
+                      cursor: "pointer",
+                      fontWeight: 600,
+                      marginTop: 12
+                    }}
+                  >
+                    + Add New Exercise
+                  </button>
+                </div>
+              )}
+
+              {/* Edit form */}
+              <div className="edit-exercise-name" style={{ marginBottom: 16 }}>
+                <label style={{ display: "block", marginBottom: 6, fontSize: 12, fontWeight: 600, color: "var(--text-primary)" }}>Exercise Name</label>
+                <input 
+                  type="text" 
+                  value={editExerciseName} 
+                  onChange={e => setEditExerciseName(e.target.value)} 
+                  placeholder="Exercise name" 
+                  className="edit-exercise-name-input"
+                  style={{ width: "100%", padding: "8px 12px", borderRadius: 8, border: "1px solid var(--border-light)", backgroundColor: "var(--bg-primary)", color: "var(--text-primary)" }}
+                />
+              </div>
+
+              <div className="edit-sets-section" style={{ marginBottom: 16 }}>
+                <h4 style={{ marginBottom: 12, color: "var(--text-primary)" }}>Sets</h4>
+                {editingSets.length > 0 && (
+                  <div className="current-sets-edit" style={{ marginBottom: 12 }}>
+                    {editingSets.map((s, idx) => (
+                      <div key={s.id} className="set-item-edit" style={{ padding: 8, background: "var(--bg-secondary)", borderRadius: 8, marginBottom: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ color: "var(--text-primary)" }}>Set {idx + 1} • {s.weight} kg × {s.reps} reps</span>
+                        <button type="button" className="remove-set-btn" onClick={() => handleRemoveSetFromEdit(s.id)} style={{ background: "transparent", border: "none", color: "#ef4444", cursor: "pointer", padding: 4 }}>✕</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="add-set-form" style={{ padding: 12, background: "var(--bg-secondary)", borderRadius: 8, marginBottom: 12 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, alignItems: "center" }}>
+                    <div className="weight-input-wrapper">
+                      <input 
+                        type="number" 
+                        placeholder="Weight" 
+                        value={newSetWeight} 
+                        onChange={e => setNewSetWeight(e.target.value)} 
+                        min={0} 
+                        step={0.5} 
+                        className="add-set-input"
+                        style={{ width: "100%", padding: "8px", borderRadius: 6, border: "1px solid var(--border-light)", backgroundColor: "var(--bg-primary)", color: "var(--text-primary)" }}
+                      />
+                    </div>
+                    <div className="reps-input-wrapper">
+                      <input 
+                        type="number" 
+                        placeholder="Reps" 
+                        value={newSetReps} 
+                        onChange={e => setNewSetReps(e.target.value)} 
+                        min={1} 
+                        className="add-set-input"
+                        style={{ width: "100%", padding: "8px", borderRadius: 6, border: "1px solid var(--border-light)", backgroundColor: "var(--bg-primary)", color: "var(--text-primary)" }}
+                      />
+                    </div>
+                    <button type="button" className="btn-primary" onClick={handleAddSetToEdit} style={{ padding: "8px 12px" }}>Add Set</button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="edit-exercise-actions" style={{ display: "flex", gap: 8 }}>
+                <button type="button" className="btn-success" onClick={handleSaveExerciseChanges} style={{ flex: 1, padding: "10px" }}>Save</button>
+                <button type="button" className="btn-secondary" onClick={handleCancelExerciseEdit} style={{ flex: 1, padding: "10px" }}>Cancel</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Workout Modal - Complete Workout Editor */}
+      {editingWorkout && (
+        <div className="modal-overlay" onClick={handleCancelWorkoutEdit}>
+          <div className="modal-container" onClick={e => e.stopPropagation()} style={{ maxHeight: "95vh", overflowY: "auto", maxWidth: "95%", width: "100%", margin: "0 auto", borderRadius: 12, paddingBottom: 16 }}>
+            <div className="modal-header">
+              <h3>Edit Workout</h3>
+            </div>
+            <div style={{ padding: "12px 16px" }}>
+              {/* Workout Name */}
+              <div style={{ marginBottom: 16, paddingBottom: 12, borderBottom: "1px solid var(--border-light)" }}>
+                <label style={{ display: "block", marginBottom: 6, fontWeight: 600, color: "var(--text-primary)", fontSize: 13 }}>Workout Name</label>
+                <input 
+                  type="text" 
+                  value={editWorkoutName} 
+                  onChange={e => setEditWorkoutName(e.target.value)} 
+                  placeholder="E.g., Chest Day, Back & Biceps" 
+                  style={{ 
+                    width: "100%", 
+                    padding: "10px", 
+                    borderRadius: 6, 
+                    border: "1px solid var(--border-light)", 
+                    backgroundColor: "var(--bg-primary)", 
+                    color: "var(--text-primary)",
+                    boxSizing: "border-box",
+                    fontSize: 14
+                  }}
+                />
+              </div>
+
+              {/* Exercises Section */}
+              <div style={{ marginBottom: 16 }}>
+                <h4 style={{ marginBottom: 10, color: "var(--text-primary)", fontSize: 13, fontWeight: 600 }}>Exercises</h4>
+                {editingWorkoutData && (editingWorkoutData?.exercises || []).length > 0 ? (
+                  <>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                      {(editingWorkoutData?.exercises || []).map(exercise => (
+                      <div key={exercise.id} style={{ padding: 10, background: "var(--bg-secondary)", borderRadius: 8, border: "1px solid var(--border-light)" }}>
+                        <div style={{ marginBottom: 8 }}>
+                          <label style={{ display: "block", marginBottom: 4, fontSize: 12, fontWeight: 600, color: "var(--text-primary)" }}>Exercise Name</label>
+                          <input 
+                            type="text" 
+                            value={exercise.name} 
+                            onChange={e => {
+                              const updated = {
+                                ...editingWorkoutData,
+                                exercises: (editingWorkoutData?.exercises || []).map(ex => ex.id === exercise.id ? { ...ex, name: e.target.value } : ex)
+                              };
+                              setEditingWorkoutData(updated);
+                            }}
+                            placeholder="Exercise name"
+                            style={{ 
+                              width: "100%", 
+                              padding: 8, 
+                              borderRadius: 6, 
+                              border: "1px solid var(--border-light)", 
+                              backgroundColor: "var(--bg-primary)", 
+                              color: "var(--text-primary)",
+                              boxSizing: "border-box",
+                              fontSize: 12
+                            }}
+                          />
+                        </div>
+
+                        {/* Sets for this exercise */}
+                        <div style={{ marginBottom: 10 }}>
+                          <label style={{ display: "block", marginBottom: 6, fontSize: 12, fontWeight: 600, color: "var(--text-primary)" }}>Sets</label>
+                          {(exercise.sets || []).map((set, idx) => (
+                              <div key={set.id} style={{ display: "flex", gap: 6, marginBottom: 8, alignItems: "center", flexWrap: "wrap" }}>
+                                <span style={{ fontSize: 11, color: "var(--text-muted)", minWidth: 40 }}>Set {idx + 1}</span>
+                                <input 
+                                  type="number" 
+                                  value={set.weight} 
+                                  onChange={e => {
+                                    const updated = {
+                                      ...editingWorkoutData,
+                                      exercises: (editingWorkoutData?.exercises || []).map(ex => ex.id === exercise.id ? {
+                                        ...ex,
+                                        sets: (ex.sets || []).map(s => s.id === set.id ? { ...s, weight: Number(e.target.value) || 0 } : s)
+                                      } : ex)
+                                    };
+                                    setEditingWorkoutData(updated);
+                                  }}
+                                  placeholder="Weight"
+                                  step="0.5"
+                                  min="0"
+                                  style={{ 
+                                    flex: 1,
+                                    minWidth: 60,
+                                    padding: 8, 
+                                    borderRadius: 4, 
+                                    border: "1px solid var(--border-light)", 
+                                    backgroundColor: "var(--bg-primary)", 
+                                    color: "var(--text-primary)",
+                                    fontSize: 12
+                                  }}
+                                />
+                                <span style={{ fontSize: 11, color: "var(--text-muted)" }}>kg</span>
+                                <input 
+                                  type="number" 
+                                  value={set.reps} 
+                                  onChange={e => {
+                                    const updated = {
+                                      ...editingWorkoutData,
+                                      exercises: (editingWorkoutData?.exercises || []).map(ex => ex.id === exercise.id ? {
+                                        ...ex,
+                                        sets: (ex.sets || []).map(s => s.id === set.id ? { ...s, reps: Number(e.target.value) || 0 } : s)
+                                      } : ex)
+                                    };
+                                    setEditingWorkoutData(updated);
+                                  }}
+                                  placeholder="Reps"
+                                  min="1"
+                                  style={{ 
+                                    flex: 1,
+                                    minWidth: 60,
+                                    padding: 8, 
+                                    borderRadius: 4, 
+                                    border: "1px solid var(--border-light)", 
+                                    backgroundColor: "var(--bg-primary)", 
+                                    color: "var(--text-primary)",
+                                    fontSize: 12
+                                  }}
+                                />
+                                <span style={{ fontSize: 11, color: "var(--text-muted)", minWidth: 35 }}>reps</span>
+                                <button 
+                                  type="button"
+                                  onClick={() => {
+                                    const updated = {
+                                      ...editingWorkoutData,
+                                      exercises: (editingWorkoutData?.exercises || []).map(ex => ex.id === exercise.id ? {
+                                        ...ex,
+                                        sets: (ex.sets || []).filter(s => s.id !== set.id)
+                                      } : ex)
+                                    };
+                                    setEditingWorkoutData(updated);
+                                  }}
+                                  style={{ 
+                                    padding: "6px 8px", 
+                                    background: "rgba(239, 68, 68, 0.1)", 
+                                    color: "var(--text-primary)", 
+                                    border: "1px solid rgba(239, 68, 68, 0.3)", 
+                                    borderRadius: 4, 
+                                    cursor: "pointer",
+                                    fontSize: 11,
+                                    fontWeight: 600,
+                                    whiteSpace: "nowrap"
+                                  }}
+                                >
+                                  Remove
+                                </button>
+                              </div>
+                            ))}
+                        </div>
+
+                        {/* Add Set Button */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newSet = { id: generateId(), weight: 0, reps: 0 };
+                            const updated = {
+                              ...editingWorkoutData,
+                              exercises: (editingWorkoutData?.exercises || []).map(ex => ex.id === exercise.id ? {
+                                ...ex,
+                                sets: [...(ex.sets || []), newSet]
+                              } : ex)
+                            };
+                            setEditingWorkoutData(updated);
+                          }}
+                          style={{
+                            width: "100%",
+                            padding: "10px",
+                            background: "var(--primary-color, #3b82f6)",
+                            color: "white",
+                            border: "none",
+                            borderRadius: 6,
+                            cursor: "pointer",
+                            fontSize: 13,
+                            fontWeight: 600,
+                            marginTop: 8,
+                            minHeight: 44
+                          }}
+                        >
+                          + Add Set
+                        </button>
+
+                        {/* Delete Exercise Button */}
+                        <div style={{ display: "flex", gap: 8 }}>
+                          <button 
+                            type="button"
+                            onClick={() => {
+                              const updated = {
+                                ...editingWorkoutData,
+                                exercises: (editingWorkoutData?.exercises || []).filter(ex => ex.id !== exercise.id)
+                              };
+                              setEditingWorkoutData(updated);
+                            }}
+                            style={{ 
+                              flex: 1,
+                              padding: "10px", 
+                              background: "rgba(239, 68, 68, 0.1)", 
+                              color: "var(--text-primary)", 
+                              border: "1px solid rgba(239, 68, 68, 0.3)", 
+                              borderRadius: 6, 
+                              cursor: "pointer",
+                              fontSize: 13,
+                              fontWeight: 600,
+                              minHeight: 44
+                            }}
+                          >
+                            Delete Exercise
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newExercise = {
+                        id: generateId(),
+                        name: "",
+                        sets: [{ id: generateId(), weight: 0, reps: 0 }]
+                      };
+                      const updated = {
+                        ...editingWorkoutData,
+                        exercises: [...(editingWorkoutData?.exercises || []), newExercise]
+                      };
+                      setEditingWorkoutData(updated);
+                    }}
+                    style={{
+                      width: "100%",
+                      padding: "12px",
+                      background: "var(--primary-color, #3b82f6)",
+                      color: "white",
+                      border: "none",
+                      borderRadius: 6,
+                      cursor: "pointer",
+                      fontSize: 13,
+                      fontWeight: 600,
+                      marginTop: 12,
+                      minHeight: 44
+                    }}
+                    title="Add a new exercise to this workout"
+                  >
+                    + Add Exercise
+                  </button>
+                </> 
+                ) : (
+                  <div style={{ padding: 12, background: "var(--bg-secondary)", borderRadius: 8, color: "var(--text-muted)", fontSize: 12, textAlign: "center" }}>
+                    No exercises yet
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="modal-actions" style={{ display: "flex", gap: 8, padding: "12px 16px", borderTop: "1px solid var(--border-light)", position: "sticky", bottom: 0, background: "var(--bg-primary)" }}>
+              <button type="button" className="btn-secondary" onClick={handleCancelWorkoutEdit} style={{ flex: 1, padding: "12px 10px", fontSize: 13, fontWeight: 600, minHeight: 44 }}>Cancel</button>
+              <button type="button" className="btn-success" onClick={handleSaveWorkoutChanges} style={{ flex: 1, padding: "12px 10px", fontSize: 13, fontWeight: 600, minHeight: 44 }}>Done</button>
             </div>
           </div>
         </div>
