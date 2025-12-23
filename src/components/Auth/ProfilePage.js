@@ -114,6 +114,14 @@ export default function ProfilePage({ user, onBack, onProfileSave }) {
     fileInputRef.current?.click();
   };
 
+  const handlePhotoRemove = (e) => {
+    e.stopPropagation();
+    setFormData((prev) => ({
+      ...prev,
+      photo: null,
+    }));
+  };
+
   const handleSave = () => {
     try {
       const profileData = {
@@ -189,11 +197,22 @@ export default function ProfilePage({ user, onBack, onProfileSave }) {
           <div className="profile-photo-section">
             <div className="profile-photo-container" onClick={handlePhotoClick}>
               {formData.photo ? (
-                <img
-                  src={formData.photo}
-                  alt="Profile"
-                  className="profile-photo-image"
-                />
+                <>
+                  <img
+                    src={formData.photo}
+                    alt="Profile"
+                    className="profile-photo-image"
+                  />
+                  <button
+                    type="button"
+                    className="profile-photo-remove-btn"
+                    onClick={handlePhotoRemove}
+                    aria-label="Remove photo"
+                    title="Remove photo"
+                  >
+                    ✕
+                  </button>
+                </>
               ) : (
                 <div className="profile-photo-placeholder">
                   <svg className="profile-photo-avatar" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
