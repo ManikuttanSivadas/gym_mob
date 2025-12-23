@@ -1356,13 +1356,58 @@ button {
 /* SET INPUT */
 .set-input-form {
   display: flex;
+  flex-direction: column;
   gap: 8px;
   margin-bottom: 16px;
-  align-items: center;
 }
 
 .set-input-form input {
-  width: 80px;
+  flex: 1;
+  min-width: 100px;
+}
+
+.weight-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 100px;
+}
+
+.weight-input-wrapper .weight-input {
+  width: 100%;
+  padding-right: 30px;
+}
+
+.weight-suffix {
+  position: absolute;
+  right: 12px;
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 500;
+  pointer-events: none;
+}
+
+.reps-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 100px;
+}
+
+.reps-input-wrapper .reps-input {
+  width: 100%;
+  padding-right: 40px;
+}
+
+.reps-suffix {
+  position: absolute;
+  right: 12px;
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 500;
+  pointer-events: none;
 }
 
 .current-sets {
@@ -2441,13 +2486,13 @@ button {
 
 .add-set-form {
   display: flex;
+  flex-direction: column;
   gap: 8px;
-  align-items: center;
-  flex-wrap: wrap;
 }
 
 .add-set-input {
-  width: 100px;
+  flex: 1;
+  min-width: 100px;
   padding: 8px 12px;
   font-size: 14px;
   border: 1px solid var(--border-light);
@@ -2460,6 +2505,32 @@ button {
   outline: none;
   border-color: var(--border-focus);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.add-set-form .weight-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 100px;
+}
+
+.add-set-form .weight-input-wrapper .add-set-input {
+  width: 100%;
+  padding-right: 30px;
+}
+
+.add-set-form .reps-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 100px;
+}
+
+.add-set-form .reps-input-wrapper .add-set-input {
+  width: 100%;
+  padding-right: 40px;
 }
 
 .edit-exercise-actions {

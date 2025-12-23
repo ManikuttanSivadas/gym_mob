@@ -107,7 +107,7 @@ function MonthPicker({ value = [], onChange, min, max, onClose }) {
   );
 }
 
-function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts }) {
+function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts, isLoading = false }) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
 
@@ -121,44 +121,7 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts }) {
   const [editingSets, setEditingSets] = useState([]);
   const [newSetWeight, setNewSetWeight] = useState("");
   const [newSetReps, setNewSetReps] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-
-  // Subscribe to real-time workout updates from Firestore
-  useEffect(() => {
-    const currentUser = AuthService.getCurrentUser();
-    if (!currentUser) {
-      setIsLoading(false);
-      return;
-    }
-
-    const uid = currentUser.uid || currentUser.email;
-    if (!uid) {
-      setIsLoading(false);
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      // Subscribe to real-time updates
-      const unsubscribe = AuthService.subscribeToWorkouts(uid, (fetchedWorkouts) => {
-        setIsLoading(false);
-        setError(null);
-      });
-
-      return () => {
-        if (typeof unsubscribe === "function") {
-          unsubscribe();
-        }
-      };
-    } catch (err) {
-      setIsLoading(false);
-      setError("Failed to load workouts");
-      console.error("Error subscribing to workouts:", err);
-    }
-  }, []);
 
   const isEditingAnyExercise = !!editingExercise;
 
@@ -258,6 +221,12 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts }) {
     if (editingSets.length === 0) { alert("Add at least one set."); return; }
     const updated = workouts.map(w => {
       if (w.id !== editingExercise.workoutId) return w;
+      // If exerciseId is null, we're adding a new exercise
+      if (editingExercise.exerciseId === null) {
+        const newExercise = { id: generateId(), name: editExerciseName.trim(), sets: [...editingSets] };
+        return { ...w, exercises: [...(w.exercises || []), newExercise] };
+      }
+      // Otherwise, we're editing an existing exercise
       const updatedExercises = (w.exercises || []).map(ex => ex.id === editingExercise.exerciseId ? { ...ex, name: editExerciseName.trim(), sets: [...editingSets] } : ex);
       return { ...w, exercises: updatedExercises };
     });
@@ -452,8 +421,14 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts }) {
                               )}
 
                               <div className="add-set-form">
-                                <input type="number" placeholder="Weight (kg)" value={newSetWeight} onChange={e => setNewSetWeight(e.target.value)} min={0} step={0.5} className="add-set-input" />
-                                <input type="number" placeholder="Reps" value={newSetReps} onChange={e => setNewSetReps(e.target.value)} min={1} className="add-set-input" />
+                                <div className="weight-input-wrapper">
+                                  <input type="number" placeholder="Weight" value={newSetWeight} onChange={e => setNewSetWeight(e.target.value)} min={0} step={0.5} className="add-set-input" />
+                                  <span className="weight-suffix">kg</span>
+                                </div>
+                                <div className="reps-input-wrapper">
+                                  <input type="number" placeholder="Reps" value={newSetReps} onChange={e => setNewSetReps(e.target.value)} min={1} className="add-set-input" />
+                                  <span className="reps-suffix">reps</span>
+                                </div>
                                 <button className="btn-primary" onClick={handleAddSetToEdit}>Add Set</button>
                               </div>
                             </div>
@@ -480,6 +455,48 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts }) {
                       </div>
                     );
                   })}
+
+                  {editingExercise && editingExercise.workoutId === workout.id && editingExercise.exerciseId === null && (
+                    <div className="exercise-item history-exercise-item" style={{ marginBottom: 12 }}>
+                      <div className="edit-exercise-container">
+                        <h4>Add New Exercise</h4>
+                        <div className="edit-exercise-name">
+                          <input type="text" value={editExerciseName} onChange={e => setEditExerciseName(e.target.value)} placeholder="Exercise name" className="edit-exercise-name-input" />
+                        </div>
+
+                        <div className="edit-sets-section">
+                          <h5>Sets</h5>
+                          {editingSets.length > 0 && (
+                            <div className="current-sets-edit">
+                              {editingSets.map((s, idx) => (
+                                <div key={s.id} className="set-item-edit">
+                                  <span>Set {idx + 1} • {s.weight} kg × {s.reps} reps</span>
+                                  <button className="remove-set-btn" onClick={() => handleRemoveSetFromEdit(s.id)}>Remove</button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          <div className="add-set-form">
+                            <div className="weight-input-wrapper">
+                              <input type="number" placeholder="Weight" value={newSetWeight} onChange={e => setNewSetWeight(e.target.value)} min={0} step={0.5} className="add-set-input" />
+                              <span className="weight-suffix">kg</span>
+                            </div>
+                            <div className="reps-input-wrapper">
+                              <input type="number" placeholder="Reps" value={newSetReps} onChange={e => setNewSetReps(e.target.value)} min={1} className="add-set-input" />
+                              <span className="reps-suffix">reps</span>
+                            </div>
+                            <button className="btn-primary" onClick={handleAddSetToEdit}>Add Set</button>
+                          </div>
+                        </div>
+
+                        <div className="edit-exercise-actions">
+                          <button className="btn-success" onClick={handleSaveExerciseChanges}>Save Exercise</button>
+                          <button className="btn-secondary" onClick={handleCancelExerciseEdit}>Cancel</button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="add-exercise-prompt" style={{ marginTop: 16, padding: 12, borderRadius: 8, background: "rgba(0,0,0,0.02)", cursor: "pointer", textAlign: "center" }} onClick={() => setEditingExercise({ workoutId: workout.id, exerciseId: null })}>
                     <strong style={{ color: "var(--text-primary)" }}>+ Add Exercise</strong>

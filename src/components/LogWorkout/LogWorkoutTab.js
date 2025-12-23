@@ -11,7 +11,7 @@ const exerciseTemplates = [
   { id: "bicep-curls", name: "Bicep Curls", category: "Arms" },
   { id: "tricep-dips", name: "Tricep Dips", category: "Arms" },
   { id: "leg-press", name: "Leg Press", category: "Legs" },
-  { id: "lat-pulldown", name: "Lat Pulldown", category: "Back" }
+  { id: "lat-pulldown", name: "Lat Pulldown", category: "Back" },
 ];
 
 function generateId() {
@@ -19,15 +19,23 @@ function generateId() {
 }
 
 // SaveConfirmationModal and SetInput
-function SaveConfirmationModal({ isOpen, onClose, onConfirm, workoutName, selectedDate }) {
+function SaveConfirmationModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  workoutName,
+  selectedDate,
+}) {
   if (!isOpen) return null;
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-container" onClick={e => e.stopPropagation()}>
+      <div className="modal-container" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h3>Save "{workoutName}"</h3>
+          <h3>Save "{workoutName.charAt(0).toUpperCase() + workoutName.slice(1)}"</h3>
           <p>
-            Save this workout for <strong>{selectedDate}</strong>? Once saved, you cannot edit this workout. Make sure all exercises and sets are correct.
+            Save this workout for <strong>{selectedDate}</strong>? Once saved,
+            you cannot edit this workout. Make sure all exercises and sets are
+            correct.
           </p>
         </div>
         <div className="modal-actions">
@@ -54,21 +62,29 @@ function SetInput({ onAddSet, sets, onRemoveSet }) {
   return (
     <div>
       <div className="set-input-form">
-        <input
-          type="number"
-          placeholder="Weight (kg)"
-          value={weight}
-          onChange={e => setWeight(e.target.value)}
-          min={0}
-          step={0.5}
-        />
-        <input
-          type="number"
-          placeholder="Reps"
-          value={reps}
-          onChange={e => setReps(e.target.value)}
-          min={1}
-        />
+        <div className="weight-input-wrapper">
+          <input
+            type="number"
+            placeholder="Weight"
+            value={weight}
+            onChange={(e) => setWeight(e.target.value)}
+            min={0}
+            step={0.5}
+            className="weight-input"
+          />
+          <span className="weight-suffix">kg</span>
+        </div>
+        <div className="reps-input-wrapper">
+          <input
+            type="number"
+            placeholder="Reps"
+            value={reps}
+            onChange={(e) => setReps(e.target.value)}
+            min={1}
+            className="reps-input"
+          />
+          <span className="reps-suffix">reps</span>
+        </div>
         <button className="btn-primary" type="button" onClick={handleSubmit}>
           Add Set
         </button>
@@ -81,7 +97,11 @@ function SetInput({ onAddSet, sets, onRemoveSet }) {
               <span>
                 Set {idx + 1} • {set.weight} kg × {set.reps} reps
               </span>
-              <button className="btn-danger" type="button" onClick={() => onRemoveSet(set.id)}>
+              <button
+                className="btn-danger"
+                type="button"
+                onClick={() => onRemoveSet(set.id)}
+              >
                 Remove
               </button>
             </div>
@@ -101,7 +121,7 @@ function LogWorkoutTab({
   setActiveExercise,
   currentSets,
   setCurrentSets,
-  onAddWorkout
+  onAddWorkout,
 }) {
   const [currentStep, setCurrentStep] = useState(1);
   const [exerciseInput, setExerciseInput] = useState("");
@@ -137,7 +157,7 @@ function LogWorkoutTab({
   }
 
   const filteredExercises = exerciseTemplates.filter(
-    ex =>
+    (ex) =>
       ex.name.toLowerCase().includes(exerciseInput.toLowerCase()) ||
       ex.category.toLowerCase().includes(exerciseInput.toLowerCase())
   );
@@ -195,7 +215,7 @@ function LogWorkoutTab({
     setActiveExercise({
       id: generateId(),
       name: exerciseName,
-      sets: []
+      sets: [],
     });
     setCurrentSets([]);
     setExerciseInput("");
@@ -210,7 +230,7 @@ function LogWorkoutTab({
     const newSet = {
       id: generateId(),
       weight: Number(weight),
-      reps: Number(reps)
+      reps: Number(reps),
     };
     if (editingExercise) {
       setEditingSets([...editingSets, newSet]);
@@ -221,9 +241,9 @@ function LogWorkoutTab({
 
   function handleRemoveSet(setId) {
     if (editingExercise) {
-      setEditingSets(editingSets.filter(set => set.id !== setId));
+      setEditingSets(editingSets.filter((set) => set.id !== setId));
     } else {
-      setCurrentSets(currentSets.filter(set => set.id !== setId));
+      setCurrentSets(currentSets.filter((set) => set.id !== setId));
     }
   }
 
@@ -236,11 +256,13 @@ function LogWorkoutTab({
     const exerciseWithSets = {
       ...(editingExercise || activeExercise),
       name: editingExercise ? editingName : activeExercise.name,
-      sets: [...sets]
+      sets: [...sets],
     };
     if (editingExercise) {
       setWorkoutExercises(
-        workoutExercises.map(ex => (ex.id === editingExercise.id ? exerciseWithSets : ex))
+        workoutExercises.map((ex) =>
+          ex.id === editingExercise.id ? exerciseWithSets : ex
+        )
       );
       setEditingExercise(null);
       setEditingSets([]);
@@ -264,7 +286,7 @@ function LogWorkoutTab({
   }
 
   function handleRemoveExercise(exerciseId) {
-    setWorkoutExercises(workoutExercises.filter(ex => ex.id !== exerciseId));
+    setWorkoutExercises(workoutExercises.filter((ex) => ex.id !== exerciseId));
   }
 
   function handleEditExercise(exercise) {
@@ -275,10 +297,13 @@ function LogWorkoutTab({
 
   function handleSaveWorkout() {
     if (selectedDate > getTodayDate()) {
-      alert("Cannot save workout for a future date. Please select today or a past date.");
+      alert(
+        "Cannot save workout for a future date. Please select today or a past date."
+      );
       return;
     }
     if (!workoutName.trim()) {
+    
       alert("Please enter a workout name");
       return;
     }
@@ -301,7 +326,7 @@ function LogWorkoutTab({
       name: workoutName.trim(),
       date: workoutDate.toISOString(),
       workoutDate: selectedDate,
-      exercises: [...workoutExercises]
+      exercises: [...workoutExercises],
     };
     onAddWorkout(newWorkout);
     setWorkoutName("");
@@ -344,7 +369,7 @@ function LogWorkoutTab({
       return date.toLocaleDateString("en-US", {
         weekday: "short",
         month: "short",
-        day: "numeric"
+        day: "numeric",
       });
     }
   }
@@ -380,7 +405,7 @@ function LogWorkoutTab({
                 <input
                   type="date"
                   value={selectedDate}
-                  onChange={e => setSelectedDate(e.target.value)}
+                  onChange={(e) => setSelectedDate(e.target.value)}
                   max={getTodayDate()}
                   min={getMinDate()}
                   className="workout-date-input"
@@ -392,13 +417,17 @@ function LogWorkoutTab({
                 </div>
               </div>
               <div className="date-display">
-                <span className="date-text">{formatSelectedDate(selectedDate)}</span>
+                <span className="date-text">
+                  {formatSelectedDate(selectedDate)}
+                </span>
                 {selectedDate === getTodayDate() && (
                   <span className="today-badge">Current</span>
                 )}
               </div>
               <div className="date-restriction-info">
-                <p>Select today or any past date. Future dates are not available.</p>
+                <p>
+                  Select today or any past date. Future dates are not available.
+                </p>
               </div>
             </div>
           </div>
@@ -408,7 +437,7 @@ function LogWorkoutTab({
               type="text"
               placeholder="Enter workout name (e.g., Push Day, Leg Day, etc.)"
               value={workoutName}
-              onChange={e => setWorkoutName(e.target.value)}
+              onChange={(e) => setWorkoutName(e.target.value)}
               className="workout-name-input"
             />
           </div>
@@ -428,12 +457,14 @@ function LogWorkoutTab({
         <div className="step-content">
           <div className="step-summary">
             <div className="summary-item">
-              <span className="summary-label">Date:</span>
-              <span className="summary-value">{formatSelectedDate(selectedDate)}</span>
+              <span className="summary-label">Date</span>
+              <span className="summary-value">
+                {formatSelectedDate(selectedDate)}
+              </span>
             </div>
             <div className="summary-item">
-              <span className="summary-label">Workout:</span>
-              <span className="summary-value">{workoutName}</span>
+              <span className="summary-label">Workout</span>
+              <span className="summary-value">{workoutName.charAt(0).toUpperCase() + workoutName.slice(1)}</span>
             </div>
           </div>
           {!currentExercise && (
@@ -459,14 +490,18 @@ function LogWorkoutTab({
                 </button>
                 {showSuggestions && filteredExercises.length > 0 && (
                   <div className="exercise-suggestions">
-                    {filteredExercises.slice(0, 5).map(ex => (
+                    {filteredExercises.slice(0, 5).map((ex) => (
                       <div
                         key={ex.id}
                         className="exercise-suggestion-item"
                         onClick={() => handleSuggestionClick(ex.name)}
                       >
-                        <span className="exercise-suggestion-name">{ex.name}</span>
-                        <span className="exercise-suggestion-category">{ex.category}</span>
+                        <span className="exercise-suggestion-name">
+                          {ex.name}
+                        </span>
+                        <span className="exercise-suggestion-category">
+                          {ex.category}
+                        </span>
                       </div>
                     ))}
                     {filteredExercises.length > 5 && (
@@ -481,20 +516,30 @@ function LogWorkoutTab({
           )}
 
           {currentExercise && (
-            <div className={editingExercise ? "editing-exercise" : "active-exercise"}>
+            <div
+              className={
+                editingExercise ? "editing-exercise" : "active-exercise"
+              }
+            >
               <h3>{editingExercise ? "Edit Exercise" : "Add Sets"}</h3>
               {editingExercise && (
                 <div style={{ marginBottom: "16px" }}>
                   <input
                     type="text"
                     value={editingName}
-                    onChange={e => setEditingName(e.target.value)}
+                    onChange={(e) => setEditingName(e.target.value)}
                     placeholder="Exercise name"
                     style={{ width: "100%" }}
                   />
                 </div>
               )}
-              <div style={{ marginBottom: "16px", color: "var(--text-muted)", fontSize: "14px" }}>
+              <div
+                style={{
+                  marginBottom: "16px",
+                  color: "var(--text-muted)",
+                  fontSize: "14px",
+                }}
+              >
                 {currentExerciseName}
               </div>
               <SetInput
@@ -503,10 +548,18 @@ function LogWorkoutTab({
                 onRemoveSet={handleRemoveSet}
               />
               <div style={{ marginTop: "16px", display: "flex", gap: "8px" }}>
-                <button className="btn-success" type="button" onClick={handleFinishExercise}>
+                <button
+                  className="btn-success"
+                  type="button"
+                  onClick={handleFinishExercise}
+                >
                   {editingExercise ? "Save Changes" : "Complete Exercise"}
                 </button>
-                <button className="btn-secondary" type="button" onClick={handleCancelExercise}>
+                <button
+                  className="btn-secondary"
+                  type="button"
+                  onClick={handleCancelExercise}
+                >
                   Cancel
                 </button>
               </div>
@@ -516,9 +569,9 @@ function LogWorkoutTab({
           {workoutExercises.length > 0 && (
             <div className="workout-exercises">
               <h3>
-                {workoutName} • {workoutExercises.length} exercises
+                {workoutName.charAt(0).toUpperCase() + workoutName.slice(1)} • {workoutExercises.length} exercises
               </h3>
-              {workoutExercises.map(exercise => (
+              {workoutExercises.map((exercise) => (
                 <div key={exercise.id} className="exercise-item">
                   <h4>
                     {exercise.name}

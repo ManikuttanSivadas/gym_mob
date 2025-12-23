@@ -9,11 +9,18 @@ import AuthService from "./components/Auth/AuthService";
 import "./App.css";
 
 function App() {
-  const [currentTab, setCurrentTab] = useState(0);
+  const [currentTab, setCurrentTab] = useState(() => {
+    const savedTab = localStorage.getItem("currentTab");
+    return savedTab ? parseInt(savedTab, 10) : 0;
+  });
   const [workouts, setWorkouts] = useState([]);
-  const [theme, setTheme] = useState("light");
+  const [theme, setTheme] = useState(() => {
+    const savedTheme = localStorage.getItem("appTheme");
+    return savedTheme || "light";
+  });
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [workoutsLoading, setWorkoutsLoading] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
 
   const [workoutName, setWorkoutName] = useState("");
@@ -61,8 +68,10 @@ function App() {
     if (!user) return;
     const uid = user.uid || user.username || user.email;
     if (!uid || typeof AuthService.subscribeToWorkouts !== "function") return;
+    setWorkoutsLoading(true);
     const unsub = AuthService.subscribeToWorkouts(uid, (workoutsFromDb) => {
       setWorkouts(workoutsFromDb || []);
+      setWorkoutsLoading(false);
     });
     return () => {
       if (typeof unsub === "function") unsub();
@@ -79,8 +88,13 @@ function App() {
   }, [workoutName, workoutExercises, activeExercise, currentSets, user]);
 
   useEffect(() => {
+    localStorage.setItem("appTheme", theme);
     document.documentElement.setAttribute("data-theme", theme);
   }, [theme]);
+
+  useEffect(() => {
+    localStorage.setItem("currentTab", currentTab.toString());
+  }, [currentTab]);
 
   // --- Click outside to close profile dropdown ---
   useEffect(() => {
@@ -245,14 +259,6 @@ function App() {
         </button>
       </nav>
 
-      {hasWorkoutInProgress && currentTab !== 0 && (
-        <div className="progress-indicator">
-          {workoutName
-            ? `"${workoutName}" in progress`
-            : "Workout in progress"}{" "}
-          • Return to "Log Workout" to continue
-        </div>
-      )}
 
       {currentTab === 0 && (
         <LogWorkoutTab
@@ -271,6 +277,7 @@ function App() {
         <ViewWorkoutsTab
           workouts={workouts}
           onUpdateWorkouts={handleUpdateWorkouts}
+          isLoading={workoutsLoading}
         />
       )}
       {currentTab === 2 && <RestTimerTab />}
