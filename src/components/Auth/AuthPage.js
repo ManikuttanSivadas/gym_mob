@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import AuthService from "./AuthService";
+import ForgotPasswordPage from "./ForgotPasswordPage";
 
 function ThemeToggle({ theme, onToggleTheme }) {
   return (
@@ -11,6 +12,7 @@ function ThemeToggle({ theme, onToggleTheme }) {
 
 function AuthPage({ onAuthSuccess, theme, onToggleTheme }) {
   const [isLogin, setIsLogin] = useState(true);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [formData, setFormData] = useState({ username: "", password: "", email: "" });
   const [message, setMessage] = useState("");
   const [isError, setIsError] = useState(false);
@@ -76,6 +78,17 @@ function AuthPage({ onAuthSuccess, theme, onToggleTheme }) {
     setIsLogin(!isLogin);
     setFormData({ username: "", password: "", email: "" });
     setMessage("");
+    setShowForgotPassword(false);
+  }
+
+  if (showForgotPassword) {
+    return (
+      <ForgotPasswordPage
+        onBack={() => setShowForgotPassword(false)}
+        theme={theme}
+        onToggleTheme={onToggleTheme}
+      />
+    );
   }
 
   return (
@@ -113,6 +126,25 @@ function AuthPage({ onAuthSuccess, theme, onToggleTheme }) {
             onChange={handleInputChange}
             required
           />
+        )}
+
+        {isLogin && (
+          <button
+            type="button"
+            onClick={() => setShowForgotPassword(true)}
+            style={{
+              background: "none",
+              border: "none",
+              color: "var(--primary-color)",
+              cursor: "pointer",
+              padding: "0.5rem 0",
+              marginBottom: "1rem",
+              textDecoration: "underline",
+              fontSize: "0.9rem",
+            }}
+          >
+            Forgot Password?
+          </button>
         )}
 
         <button type="submit" disabled={loading}>

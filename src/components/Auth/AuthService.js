@@ -4,6 +4,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
+  sendPasswordResetEmail,
 } from "firebase/auth";
 import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
 
@@ -284,6 +285,22 @@ const AuthService = {
       }
     );
     return unsub;
+  },
+
+  async sendPasswordReset(email) {
+    try {
+      await sendPasswordResetEmail(auth, email);
+      return {
+        success: true,
+        message: "Password reset email sent",
+      };
+    } catch (error) {
+      const mappedError = mapError(error);
+      return {
+        success: false,
+        error: mappedError,
+      };
+    }
   },
 };
 
