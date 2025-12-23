@@ -2,14 +2,6 @@ import React, { useState } from "react";
 import AuthService from "./AuthService";
 import ForgotPasswordPage from "./ForgotPasswordPage";
 
-function ThemeToggle({ theme, onToggleTheme }) {
-  return (
-    <button className="theme-toggle" onClick={onToggleTheme} title="Toggle theme">
-      <span className="theme-icon">{theme === "light" ? "◐" : "○"}</span>
-    </button>
-  );
-}
-
 function AuthPage({ onAuthSuccess, theme, onToggleTheme }) {
   const [isLogin, setIsLogin] = useState(true);
   const [showForgotPassword, setShowForgotPassword] = useState(false);

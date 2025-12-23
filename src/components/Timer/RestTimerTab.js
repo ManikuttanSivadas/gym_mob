@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, memo } from 'react';
 
 // Helper function to generate unique IDs
 function generateId() {
@@ -359,4 +359,4 @@ function Stopwatch() {
   );
 }
 
-export default RestTimerTab;
+export default memo(RestTimerTab);

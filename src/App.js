@@ -100,22 +100,38 @@ function App() {
   }, [user]);
 
   // persist current workout state when user changes or workout data changes
+  // Using a debounce effect to prevent excessive Firestore writes
   useEffect(() => {
     const uid = user?.uid;
     const email = user?.email;
-    if (uid && email && typeof AuthService.saveCurrentWorkoutState === "function") {
+    if (!uid || !email || typeof AuthService.saveCurrentWorkoutState !== "function") return;
+    
+    // Debounce saves with a 500ms delay
+    const timer = setTimeout(() => {
       const workoutState = { workoutName, workoutExercises, activeExercise, currentSets };
-      AuthService.saveCurrentWorkoutState(uid, email, workoutState);
-    }
+      AuthService.saveCurrentWorkoutState(uid, email, workoutState).catch(err => 
+        console.error("Error saving workout state:", err)
+      );
+    }, 500);
+    
+    return () => clearTimeout(timer);
   }, [workoutName, workoutExercises, activeExercise, currentSets, user]);
 
+  // Debounce localStorage writes for theme
   useEffect(() => {
-    localStorage.setItem("appTheme", theme);
-    document.documentElement.setAttribute("data-theme", theme);
+    const timer = setTimeout(() => {
+      localStorage.setItem("appTheme", theme);
+      document.documentElement.setAttribute("data-theme", theme);
+    }, 100);
+    return () => clearTimeout(timer);
   }, [theme]);
 
+  // Debounce localStorage writes for tab
   useEffect(() => {
-    localStorage.setItem("currentTab", currentTab.toString());
+    const timer = setTimeout(() => {
+      localStorage.setItem("currentTab", currentTab.toString());
+    }, 100);
+    return () => clearTimeout(timer);
   }, [currentTab]);
 
   // --- Click outside to close profile dropdown ---

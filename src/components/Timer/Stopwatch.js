@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, memo } from 'react';
 
-export default function Stopwatch() {
+export default memo(function Stopwatch() {
   const [time, setTime] = useState(0);
   const [running, setRunning] = useState(false);
   const [laps, setLaps] = useState([]);
@@ -108,4 +108,4 @@ export default function Stopwatch() {
       )}
     </div>
   );
-}
+});

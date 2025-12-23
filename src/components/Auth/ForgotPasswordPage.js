@@ -8,10 +8,6 @@ function ForgotPasswordPage({ onBack, theme, onToggleTheme }) {
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
 
-  function handleThemeToggle() {
-    onToggleTheme && onToggleTheme();
-  }
-
   async function handleSubmit(e) {
     e.preventDefault();
     setMessage("");

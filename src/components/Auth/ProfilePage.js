@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, memo } from "react";
 import "../styles/ProfilePage.css";
 import AuthService from "./AuthService";
 
-export default function ProfilePage({ user, onBack, onProfileSave }) {
+export default memo(function ProfilePage({ user, onBack, onProfileSave }) {
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -381,4 +381,4 @@ export default function ProfilePage({ user, onBack, onProfileSave }) {
       </div>
     </div>
   );
-}
+});

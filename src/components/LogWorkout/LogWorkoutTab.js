@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, memo } from "react";
 
 // Dummy exercise templates (import from a constants file in real usage)
 const exerciseTemplates = [
@@ -649,4 +649,4 @@ function LogWorkoutTab({
   );
 }
 
-export default LogWorkoutTab;
+export default memo(LogWorkoutTab);

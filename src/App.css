@@ -2619,6 +2619,7 @@ footer {
 @supports (-moz-appearance: none) {
   .workout-date-input,
   .date-filter-input {
+    appearance: none;
     -moz-appearance: none;
   }
 }
