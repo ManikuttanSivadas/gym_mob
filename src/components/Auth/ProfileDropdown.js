@@ -3,6 +3,11 @@ import React, { useState } from "react";
 export default function ProfileDropdown({ user, onLogout, onClose, isOpen }) {
   const [knowUsOpen, setKnowUsOpen] = useState(false);
 
+  // Extract username from email if needed
+  const extractUsernameFromEmail = (email) => {
+    return email ? email.split("@")[0] : "";
+  };
+
   if (!isOpen) return null;
 
   // safe display values (prevent reading [0] of undefined)
@@ -10,9 +15,16 @@ export default function ProfileDropdown({ user, onLogout, onClose, isOpen }) {
     (user && (user.name || user.username || user.displayName || user.email)) ||
     "";
   const initial = display ? String(display)[0].toUpperCase() : "?";
-  const displayName =
-    (user && (user.name || user.username || user.displayName)) ||
-    "Unknown User";
+  
+  // Get username, preferring actual username field, fallback to email username part
+  let displayName = "Unknown User";
+  if (user) {
+    if (user.name) displayName = user.name;
+    else if (user.username && !user.username.includes("@")) displayName = user.username;
+    else if (user.displayName) displayName = user.displayName;
+    else if (user.email) displayName = extractUsernameFromEmail(user.email);
+  }
+  
   const email = (user && user.email) || "No email";
 
   return (

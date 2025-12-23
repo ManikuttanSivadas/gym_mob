@@ -32,6 +32,10 @@ function MonthPicker({ value = [], onChange, min, max, onClose }) {
 
   const minIndex = parseYMIndex(min);
   const maxIndex = parseYMIndex(max);
+  const minYear = today.getFullYear() - 10; // Allow going back 10 years from now
+  const maxYear = today.getFullYear(); // Only current year and past
+  const canGoNext = year < maxYear;
+  const canGoPrev = year > minYear;
 
   useEffect(() => {
     function onKey(e) { if (e.key === "Escape") onClose && onClose(); }
@@ -65,9 +69,9 @@ function MonthPicker({ value = [], onChange, min, max, onClose }) {
     <div className="modal-overlay" onClick={() => onClose && onClose()}>
       <div className="modal-container" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 360 }}>
         <div className="modal-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <button className="btn-secondary" onClick={() => setYear(y => y - 1)} aria-label="Prev year">‹</button>
+          <button className="btn-secondary" onClick={() => canGoPrev && setYear(y => y - 1)} disabled={!canGoPrev} aria-label="Prev year" style={{ opacity: canGoPrev ? 1 : 0.5, cursor: canGoPrev ? "pointer" : "not-allowed" }}>‹</button>
           <strong>{year}</strong>
-          <button className="btn-secondary" onClick={() => setYear(y => y + 1)} aria-label="Next year">›</button>
+          <button className="btn-secondary" onClick={() => canGoNext && setYear(y => y + 1)} disabled={!canGoNext} aria-label="Next year" style={{ opacity: canGoNext ? 1 : 0.5, cursor: canGoNext ? "pointer" : "not-allowed" }}>›</button>
         </div>
 
         <div style={{ padding: "12px 16px" }}>
