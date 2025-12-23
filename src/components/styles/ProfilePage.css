@@ -256,20 +256,20 @@
     align-items: flex-start;
     justify-content: center;
     overflow-y: auto;
-    padding: 16px;
+    padding: 0;
     background-color: var(--bg-primary);
   }
 
   .profile-page {
     max-width: 100%;
     width: 100%;
-    margin: 16px 0;
+    margin: 0;
     padding: 20px;
     background-color: var(--bg-secondary);
-    border-radius: 16px;
-    box-shadow: var(--shadow-lg);
-    border: 1px solid var(--border-light);
-    min-height: auto;
+    border-radius: 0;
+    box-shadow: none;
+    border: none;
+    min-height: 100vh;
     max-height: none;
     overflow-y: visible;
   }
