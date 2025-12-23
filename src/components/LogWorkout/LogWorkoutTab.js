@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 
 // Dummy exercise templates (import from a constants file in real usage)
 const exerciseTemplates = [

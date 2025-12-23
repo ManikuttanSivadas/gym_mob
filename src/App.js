@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import LogWorkoutTab from "./components/LogWorkout/LogWorkoutTab";
 import ViewWorkoutsTab from "./components/ViewWorkouts/ViewWorkoutsTab";
 import RestTimerTab from "./components/Timer/RestTimerTab";
@@ -138,11 +138,11 @@ function App() {
   }
 
   // toggle theme (was referenced but not defined)
-  function handleToggleTheme() {
+  const handleToggleTheme = useCallback(() => {
     setTheme(prev => (prev === "light" ? "dark" : "light"));
-  }
+  }, []);
   
-  function handleAddWorkout(workout) {
+  const handleAddWorkout = useCallback((workout) => {
     const newWorkouts = [workout, ...workouts];
     setWorkouts(newWorkouts);
     const uid = user?.uid;
@@ -152,17 +152,17 @@ function App() {
     if (uid && typeof AuthService.clearCurrentWorkoutState === "function") {
       AuthService.clearCurrentWorkoutState(uid);
     }
-  }
+  }, [user, workouts]);
 
-  function handleUpdateWorkouts(updatedWorkouts) {
+  const handleUpdateWorkouts = useCallback((updatedWorkouts) => {
     setWorkouts(updatedWorkouts);
     const uid = user?.uid;
     if (uid && typeof AuthService.saveUserWorkouts === "function") {
       AuthService.saveUserWorkouts(uid, updatedWorkouts);
     }
-  }
+  }, [user]);
 
-  function handleLogout() {
+  const handleLogout = useCallback(() => {
     const uid = user?.uid;
     if (uid && typeof AuthService.clearCurrentWorkoutState === "function") {
       AuthService.clearCurrentWorkoutState(uid);
@@ -178,7 +178,7 @@ function App() {
     setCurrentSets([]);
     setCurrentTab(0);
     setShowProfileDropdown(false);
-  }
+  }, [user]);
 
   const hasWorkoutInProgress =
     workoutName.trim() || workoutExercises.length > 0 || activeExercise;

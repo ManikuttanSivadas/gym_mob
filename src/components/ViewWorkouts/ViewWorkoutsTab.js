@@ -145,14 +145,16 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts, isLoading = false })
     return oldest || getTodayMonth();
   }
 
-  // filter logic (multiple months)
-  const filteredWorkouts = (filterMonths && filterMonths.length > 0)
-    ? workouts.filter(w => {
-        const d = w.workoutDate || (w.date || "").split("T")[0] || "";
-        const ym = d.slice(0,7);
-        return filterMonths.includes(ym);
-      })
-    : workouts;
+  // filter logic (multiple months) - memoized to prevent re-filtering on every render
+  const filteredWorkouts = useMemo(() => {
+    return (filterMonths && filterMonths.length > 0)
+      ? workouts.filter(w => {
+          const d = w.workoutDate || (w.date || "").split("T")[0] || "";
+          const ym = d.slice(0,7);
+          return filterMonths.includes(ym);
+        })
+      : workouts;
+  }, [workouts, filterMonths]);
 
   function formatWorkoutDate(workout) {
     const dateStr = workout.workoutDate || (workout.date || "").split("T")[0] || "";

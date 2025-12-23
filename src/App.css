@@ -3287,3 +3287,38 @@ footer {
   font-size: 13px;
   line-height: 1.4;
 }
+
+/* MOBILE PERFORMANCE OPTIMIZATIONS */
+@media (max-width: 480px) {
+  /* Reduce animation durations for snappier feel on mobile */
+  * {
+    --animation-duration: 0.2s;
+  }
+  
+  /* Optimize transitions for mobile */
+  button, input, select, textarea {
+    transition: all 0.15s ease;
+  }
+  
+  /* Reduce will-change usage to only actively animated elements */
+  .loading-spinner {
+    will-change: transform;
+  }
+  
+  /* Optimize shadows for mobile (less intensive) */
+  .modal-container, .exercise-item {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Prevent layout shifts with explicit heights where possible */
+  .set-item, .exercise-item {
+    min-height: 44px;
+  }
+  
+  /* Optimize images (if any) */
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+}
+
