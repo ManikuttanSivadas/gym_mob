@@ -46,6 +46,24 @@ function App() {
       setUser(currentUser);
 
       const uid = currentUser.uid;
+      const email = currentUser.email;
+      
+      // Load profile photo from Firestore
+      if (uid && email && typeof AuthService.getUserProfile === "function") {
+        AuthService.getUserProfile(uid, email)
+          .then((profileData) => {
+            if (profileData && profileData.photo) {
+              setUser((prev) => ({
+                ...prev,
+                photo: profileData.photo,
+              }));
+            }
+          })
+          .catch((error) => {
+            console.error("Error loading profile on login:", error);
+          });
+      }
+
       // guard AuthService calls with a valid uid
       if (uid && typeof AuthService.getUserWorkouts === "function") {
         const userWorkouts = AuthService.getUserWorkouts(uid) || [];
@@ -122,6 +140,23 @@ function App() {
   function handleAuthSuccess(loggedInUser) {
     setUser(loggedInUser);
     const uid = loggedInUser.uid;
+    const email = loggedInUser.email;
+
+    // Load profile photo from Firestore
+    if (uid && email && typeof AuthService.getUserProfile === "function") {
+      AuthService.getUserProfile(uid, email)
+        .then((profileData) => {
+          if (profileData && profileData.photo) {
+            setUser((prev) => ({
+              ...prev,
+              photo: profileData.photo,
+            }));
+          }
+        })
+        .catch((error) => {
+          console.error("Error loading profile on login:", error);
+        });
+    }
 
     if (uid && typeof AuthService.getUserWorkouts === "function") {
       const userWorkouts = AuthService.getUserWorkouts(uid) || [];
