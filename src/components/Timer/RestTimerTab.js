@@ -60,66 +60,68 @@ function RestTimerTab() {
 function RestTimer() {
   const [seconds, setSeconds] = useState(0);
   const [running, setRunning] = useState(false);
-  const [displayValue, setDisplayValue] = useState('00:00:00');
+  const [inputDigits, setInputDigits] = useState('');
   const intervalRef = useRef(null);
-  const inputRef = useRef(null);
 
-  // Auto-format input as HH:MM:SS
-  function formatInputDisplay(totalSeconds) {
+  // Format seconds to HH:MM:SS
+  const formatTime = (totalSeconds) => {
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const secs = totalSeconds % 60;
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  }
+  };
 
-  // Handle input change - only allow numbers, auto-format as user types
-  function handleInputChange(e) {
-    let rawInput = e.target.value;
+  // Format digits to HH:MM:SS display
+  const formatDisplayValue = (digits) => {
+    if (!digits) return '00:00:00';
     
-    // Only keep digits
-    const digitsOnly = rawInput.replace(/\D/g, '');
-    
-    if (digitsOnly.length === 0) {
-      setDisplayValue('00:00:00');
-      setSeconds(0);
-      return;
-    }
-
-    // Limit to 6 digits (HHMMSS)
-    const limitedDigits = digitsOnly.slice(0, 6);
-    let totalSecs = 0;
-
-    if (limitedDigits.length <= 2) {
-      // Seconds only: "5" -> "00:00:05"
-      const secs = parseInt(limitedDigits, 10);
-      totalSecs = Math.min(secs, 59);
-    } else if (limitedDigits.length <= 4) {
-      // Minutes and seconds: "125" -> "00:01:25"
-      const mins = Math.floor(parseInt(limitedDigits, 10) / 100);
-      const secs = parseInt(limitedDigits, 10) % 100;
-      totalSecs = mins * 60 + Math.min(secs, 59);
+    if (digits.length <= 2) {
+      return `00:00:${digits.padStart(2, '0')}`;
+    } else if (digits.length <= 4) {
+      const mins = Math.floor(parseInt(digits, 10) / 100);
+      const secs = parseInt(digits, 10) % 100;
+      return `00:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     } else {
-      // Hours, minutes, seconds: "012345" -> "01:23:45"
-      const hours = Math.floor(parseInt(limitedDigits, 10) / 10000);
-      const mins = Math.floor((parseInt(limitedDigits, 10) % 10000) / 100);
-      const secs = parseInt(limitedDigits, 10) % 100;
-      totalSecs = hours * 3600 + mins * 60 + Math.min(secs, 59);
+      const hours = Math.floor(parseInt(digits, 10) / 10000);
+      const mins = Math.floor((parseInt(digits, 10) % 10000) / 100);
+      const secs = parseInt(digits, 10) % 100;
+      return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     }
+  };
 
-    const formatted = formatInputDisplay(totalSecs);
-    setDisplayValue(formatted);
-    setSeconds(totalSecs);
-  }
+  // Calculate total seconds from digits
+  const calculateSeconds = (digits) => {
+    if (!digits) return 0;
+    
+    if (digits.length <= 2) {
+      return parseInt(digits, 10);
+    } else if (digits.length <= 4) {
+      const mins = Math.floor(parseInt(digits, 10) / 100);
+      const secs = parseInt(digits, 10) % 100;
+      return mins * 60 + secs;
+    } else {
+      const hours = Math.floor(parseInt(digits, 10) / 10000);
+      const mins = Math.floor((parseInt(digits, 10) % 10000) / 100);
+      const secs = parseInt(digits, 10) % 100;
+      return hours * 3600 + mins * 60 + secs;
+    }
+  };
+
+  // Handle input change
+  const handleInputChange = (e) => {
+    const value = e.target.value;
+    const digitsOnly = value.replace(/\D/g, '');
+    const limited = digitsOnly.slice(0, 6);
+    
+    setInputDigits(limited);
+    setSeconds(calculateSeconds(limited));
+  };
 
   // Countdown effect
   useEffect(() => {
     if (running && seconds > 0) {
       intervalRef.current = setInterval(() => {
-        setSeconds(prevSecs => {
-          const newSecs = prevSecs > 0 ? prevSecs - 1 : 0;
-          setDisplayValue(formatInputDisplay(newSecs));
-          return newSecs;
-        });
+        setSeconds(prevSecs => prevSecs > 0 ? prevSecs - 1 : 0);
       }, 1000);
     } else {
       clearInterval(intervalRef.current);
@@ -131,7 +133,6 @@ function RestTimer() {
   useEffect(() => {
     if (seconds === 0 && running) {
       setRunning(false);
-      // Play a simple alert sound
       if (typeof Audio !== 'undefined') {
         try {
           const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAAB9AAACABAAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBg==');
@@ -141,34 +142,35 @@ function RestTimer() {
     }
   }, [seconds, running]);
 
-  function startTimer() {
+  const handleStartTimer = () => {
     if (seconds > 0) {
       setRunning(true);
     }
-  }
+  };
 
-  function pauseTimer() {
+  const handlePauseTimer = () => {
     setRunning(false);
-  }
+  };
 
-  function resetTimer() {
+  const handleResetTimer = () => {
     setSeconds(0);
     setRunning(false);
-    setDisplayValue('00:00:00');
-  }
+    setInputDigits('');
+  };
+
+  // Display value
+  
 
   return (
     <div className="rest-timer-container">
-      {/* Single Input Box - Acts as both input and countdown display */}
+      {/* Single Input Box */}
       <div className="rest-timer-input-wrapper">
         <input
-          ref={inputRef}
           type="text"
           className={`rest-timer-input-display ${running ? 'running' : ''}`}
-          value={displayValue}
-          onChange={handleInputChange}
+          value={running ? formatTime(seconds) : (inputDigits ? formatDisplayValue(inputDigits) : '00:00:00')}
+          onChange={!running ? handleInputChange : undefined}
           disabled={running}
-          maxLength="8"
           inputMode="numeric"
           placeholder="00:00:00"
         />
@@ -178,7 +180,7 @@ function RestTimer() {
       <div className="rest-timer-controls">
         <button
           className={`rest-timer-button ${running ? 'pause-button' : 'start-button'}`}
-          onClick={running ? pauseTimer : startTimer}
+          onClick={running ? handlePauseTimer : handleStartTimer}
           disabled={seconds === 0 && !running}
         >
           {running ? 'Pause' : 'Start'}
@@ -186,7 +188,7 @@ function RestTimer() {
         {seconds > 0 && (
           <button
             className="rest-timer-button reset-button"
-            onClick={resetTimer}
+            onClick={handleResetTimer}
           >
             Reset
           </button>
