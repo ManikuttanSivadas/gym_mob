@@ -91,38 +91,62 @@
   background: var(--bg-secondary);
   color: var(--text-primary);
   padding: 20px;
-  gap: 16px;
+  gap: 30px;
   transition: all 0.2s ease;
 }
 
-/* Time Display Section */
-.rest-timer-display-section {
+/* Single Input Wrapper - Main Focus */
+.rest-timer-input-wrapper {
   display: flex;
   justify-content: center;
   align-items: center;
   flex: 1;
-  padding: 30px 0;
-  gap: 20px;
+  padding: 40px 0;
 }
 
-.rest-timer-display {
-  font-size: 64px;
+.rest-timer-input-display {
+  width: 100%;
+  max-width: none;
+  padding: 0;
+  font-size: 72px;
   font-weight: 300;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
   letter-spacing: -1px;
-  color: var(--text-primary);
-  font-variant-numeric: tabular-nums;
-  transition: all 0.1s ease;
   text-align: center;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-primary);
+  transition: all 0.1s ease;
+  font-variant-numeric: tabular-nums;
   line-height: 1;
-  min-width: 160px;
 }
 
-.rest-timer-display.running {
-  animation: timer-pulse 0.6s ease-in-out infinite;
+.rest-timer-input-display::placeholder {
+  color: var(--text-muted);
+  opacity: 0.5;
 }
 
-@keyframes timer-pulse {
+.rest-timer-input-display:focus {
+  outline: none;
+  border: none;
+  box-shadow: none;
+  background: transparent;
+}
+
+.rest-timer-input-display:disabled {
+  opacity: 1;
+  cursor: not-allowed;
+  border: none;
+  box-shadow: none;
+  background: transparent;
+}
+
+.rest-timer-input-display.running {
+  animation: pulse-glow 0.6s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
   0%, 100% {
     opacity: 1;
   }
@@ -133,154 +157,90 @@
 
 /* Hour Adjust Group */
 .rest-timer-adjust-group {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
+  display: none;
 }
 
 .rest-timer-unit {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  display: none;
 }
 
 /* Adjust Buttons */
 .rest-timer-adjust-btn {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  border: none;
-  font-size: 24px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  background: var(--bg-tertiary);
-  color: var(--text-primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: var(--shadow-sm);
+  display: none;
 }
 
 .rest-timer-adjust-btn:hover:not(:disabled) {
-  background: var(--bg-accent);
-  box-shadow: var(--shadow-md);
-  transform: scale(1.05);
+  display: none;
 }
 
 .rest-timer-adjust-btn:active:not(:disabled) {
-  transform: scale(0.95);
+  display: none;
 }
 
 .rest-timer-adjust-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
+  display: none;
 }
 
 /* Minute Controls */
 .rest-timer-minute-controls {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 12px;
-  padding: 0 20px;
+  display: none;
 }
 
 .rest-timer-minute-btn {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  border: none;
-  font-size: 20px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  background: var(--bg-tertiary);
-  color: var(--text-primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: var(--shadow-sm);
+  display: none;
 }
 
 .rest-timer-minute-btn:hover:not(:disabled) {
-  background: var(--bg-accent);
-  box-shadow: var(--shadow-md);
-  transform: scale(1.05);
+  display: none;
 }
 
 .rest-timer-minute-btn:active:not(:disabled) {
-  transform: scale(0.95);
+  display: none;
 }
 
 .rest-timer-minute-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
+  display: none;
 }
 
 .rest-timer-minute-label {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  min-width: 30px;
-  text-align: center;
+  display: none;
 }
 
-/* Preset Buttons - Compact */
+/* Preset Buttons - Hidden */
 .rest-timer-presets {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 8px;
-  padding: 0;
+  display: none;
 }
 
 .rest-timer-preset-btn {
-  padding: 8px 6px;
-  font-size: 12px;
-  font-weight: 600;
-  border: 1px solid var(--border-light);
-  border-radius: 6px;
-  background: var(--bg-tertiary);
-  color: var(--text-primary);
-  cursor: pointer;
-  transition: all 0.2s ease;
+  display: none;
 }
 
 .rest-timer-preset-btn:hover:not(:disabled) {
-  background: var(--bg-accent);
-  border-color: var(--border-accent);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
+  display: none;
 }
 
 .rest-timer-preset-btn:active:not(:disabled) {
-  transform: translateY(0);
+  display: none;
 }
 
 .rest-timer-preset-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+  display: none;
 }
 
 /* Control Buttons */
 .rest-timer-controls {
   display: flex;
   justify-content: center;
-  gap: 16px;
+  gap: 20px;
   padding: 0 20px;
 }
 
 .rest-timer-button {
-  width: 70px;
-  height: 70px;
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
   border: none;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -312,13 +272,13 @@
 
 /* Pause Button - Yellow/Primary */
 .pause-button {
-  background: var(--btn-primary);
+  background: var(--btn-danger);
   color: white;
 }
 
 .pause-button:hover:not(:disabled) {
-  background: var(--btn-primary-hover);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+  background: var(--btn-danger-hover);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
 }
 
 /* Reset Button - Red */
@@ -422,5 +382,101 @@
     width: 40px;
     height: 40px;
     font-size: 18px;
+  }
+}
+
+/* Time Input Section - Removed */
+.rest-timer-input-section {
+  display: none;
+}
+
+.rest-timer-input {
+  display: none;
+}
+
+.rest-timer-input::placeholder {
+  display: none;
+}
+
+.rest-timer-input:focus {
+  display: none;
+}
+
+.rest-timer-input:disabled {
+  display: none;
+}
+
+.rest-timer-set-btn {
+  display: none;
+}
+
+.rest-timer-set-btn:hover:not(:disabled) {
+  display: none;
+}
+
+.rest-timer-set-btn:active:not(:disabled) {
+  display: none;
+}
+
+.rest-timer-set-btn:disabled {
+  display: none;
+}
+
+/* Dark Mode Support for Input */
+[data-theme="dark"] .rest-timer-input {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-color: var(--border-light);
+}
+
+[data-theme="dark"] .rest-timer-input:focus {
+  border-color: var(--border-accent);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+[data-theme="dark"] .rest-timer-set-btn {
+  background: var(--btn-primary);
+  color: white;
+}
+
+[data-theme="dark"] .rest-timer-set-btn:hover:not(:disabled) {
+  background: var(--btn-primary-hover);
+}
+
+/* Mobile Responsive Design */
+@media (max-width: 480px) {
+  .rest-timer-container {
+    padding: 20px;
+    gap: 30px;
+  }
+
+  .rest-timer-input-wrapper {
+    padding: 30px 0;
+  }
+
+  .rest-timer-input-display {
+    font-size: 56px;
+  }
+
+  .rest-timer-button {
+    width: 70px;
+    height: 70px;
+    font-size: 16px;
+  }
+
+  .rest-timer-controls {
+    gap: 16px;
+  }
+}
+
+@media (max-width: 360px) {
+  .rest-timer-input-display {
+    font-size: 48px;
+  }
+
+  .rest-timer-button {
+    width: 64px;
+    height: 64px;
+    font-size: 14px;
   }
 }

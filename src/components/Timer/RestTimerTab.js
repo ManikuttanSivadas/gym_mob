@@ -58,49 +58,91 @@ function RestTimerTab() {
 
 // ---- REST TIMER COMPONENT ---- //
 function RestTimer() {
-  const [timer, setTimer] = useState(0);
+  const [seconds, setSeconds] = useState(0);
   const [running, setRunning] = useState(false);
+  const [displayValue, setDisplayValue] = useState('00:00:00');
   const intervalRef = useRef(null);
+  const inputRef = useRef(null);
 
+  // Auto-format input as HH:MM:SS
+  function formatInputDisplay(totalSeconds) {
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const secs = totalSeconds % 60;
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  }
+
+  // Handle input change - only allow numbers, auto-format as user types
+  function handleInputChange(e) {
+    let rawInput = e.target.value;
+    
+    // Only keep digits
+    const digitsOnly = rawInput.replace(/\D/g, '');
+    
+    if (digitsOnly.length === 0) {
+      setDisplayValue('00:00:00');
+      setSeconds(0);
+      return;
+    }
+
+    // Limit to 6 digits (HHMMSS)
+    const limitedDigits = digitsOnly.slice(0, 6);
+    let totalSecs = 0;
+
+    if (limitedDigits.length <= 2) {
+      // Seconds only: "5" -> "00:00:05"
+      const secs = parseInt(limitedDigits, 10);
+      totalSecs = Math.min(secs, 59);
+    } else if (limitedDigits.length <= 4) {
+      // Minutes and seconds: "125" -> "00:01:25"
+      const mins = Math.floor(parseInt(limitedDigits, 10) / 100);
+      const secs = parseInt(limitedDigits, 10) % 100;
+      totalSecs = mins * 60 + Math.min(secs, 59);
+    } else {
+      // Hours, minutes, seconds: "012345" -> "01:23:45"
+      const hours = Math.floor(parseInt(limitedDigits, 10) / 10000);
+      const mins = Math.floor((parseInt(limitedDigits, 10) % 10000) / 100);
+      const secs = parseInt(limitedDigits, 10) % 100;
+      totalSecs = hours * 3600 + mins * 60 + Math.min(secs, 59);
+    }
+
+    const formatted = formatInputDisplay(totalSecs);
+    setDisplayValue(formatted);
+    setSeconds(totalSecs);
+  }
+
+  // Countdown effect
   useEffect(() => {
-    if (running && timer > 0) {
+    if (running && seconds > 0) {
       intervalRef.current = setInterval(() => {
-        setTimer(t => t > 0 ? t - 1 : 0);
+        setSeconds(prevSecs => {
+          const newSecs = prevSecs > 0 ? prevSecs - 1 : 0;
+          setDisplayValue(formatInputDisplay(newSecs));
+          return newSecs;
+        });
       }, 1000);
     } else {
       clearInterval(intervalRef.current);
     }
     return () => clearInterval(intervalRef.current);
-  }, [running, timer]);
+  }, [running, seconds]);
 
+  // Timer finished
   useEffect(() => {
-    if (timer === 0 && running) {
+    if (seconds === 0 && running) {
       setRunning(false);
-      // Play a simple alert sound (if available)
+      // Play a simple alert sound
       if (typeof Audio !== 'undefined') {
         try {
-          const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAAB9AAACABAAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj==');
+          const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAAB9AAACABAAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBg==');
           audio.play().catch(() => {});
         } catch (e) {}
       }
     }
-  }, [timer, running]);
-
-
-  function addMinute() {
-    if (!running) {
-      setTimer(prev => prev + 60);
-    }
-  }
-
-  function subtractMinute() {
-    if (!running && timer > 0) {
-      setTimer(prev => Math.max(0, prev - 60));
-    }
-  }
+  }, [seconds, running]);
 
   function startTimer() {
-    if (timer > 0) {
+    if (seconds > 0) {
       setRunning(true);
     }
   }
@@ -110,66 +152,26 @@ function RestTimer() {
   }
 
   function resetTimer() {
-    setTimer(0);
+    setSeconds(0);
     setRunning(false);
+    setDisplayValue('00:00:00');
   }
-
-  const formatTimer = (seconds) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
 
   return (
     <div className="rest-timer-container">
-      {/* Time Display */}
-      <div className="rest-timer-display-section">
-        <div className={`rest-timer-display ${running ? 'running' : ''}`}>
-          {formatTimer(timer)}
-        </div>
-      </div>
-
-      {/* Minute Adjustment Buttons */}
-      <div className="rest-timer-minute-controls">
-        <button
-          className="rest-timer-minute-btn"
-          onClick={subtractMinute}
-          disabled={running || timer === 0}
-          title="Subtract 1 minute"
-        >
-          −
-        </button>
-        <span className="rest-timer-minute-label">min</span>
-        <button
-          className="rest-timer-minute-btn"
-          onClick={addMinute}
+      {/* Single Input Box - Acts as both input and countdown display */}
+      <div className="rest-timer-input-wrapper">
+        <input
+          ref={inputRef}
+          type="text"
+          className={`rest-timer-input-display ${running ? 'running' : ''}`}
+          value={displayValue}
+          onChange={handleInputChange}
           disabled={running}
-          title="Add 1 minute"
-        >
-          +
-        </button>
-      </div>
-
-      {/* Quick Preset Buttons */}
-      <div className="rest-timer-presets">
-        {[5, 10, 15, 30, 60, 120].map(seconds => {
-          const mins = seconds < 60 ? seconds : Math.round(seconds / 60);
-          const label = seconds < 60 ? `${seconds}s` : `${mins}m`;
-          return (
-            <button
-              key={seconds}
-              className="rest-timer-preset-btn"
-              onClick={() => {
-                setTimer(seconds);
-                setRunning(false);
-              }}
-              disabled={running}
-            >
-              {label}
-            </button>
-          );
-        })}
+          maxLength="8"
+          inputMode="numeric"
+          placeholder="00:00:00"
+        />
       </div>
 
       {/* Control Buttons */}
@@ -177,11 +179,15 @@ function RestTimer() {
         <button
           className={`rest-timer-button ${running ? 'pause-button' : 'start-button'}`}
           onClick={running ? pauseTimer : startTimer}
+          disabled={seconds === 0 && !running}
         >
           {running ? 'Pause' : 'Start'}
         </button>
-        {!running && timer > 0 && (
-          <button className="rest-timer-button reset-button" onClick={resetTimer}>
+        {seconds > 0 && (
+          <button
+            className="rest-timer-button reset-button"
+            onClick={resetTimer}
+          >
             Reset
           </button>
         )}
