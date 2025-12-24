@@ -18,6 +18,7 @@ export default memo(function ProfilePage({ user, onBack, onProfileSave }) {
 
   const [originalData, setOriginalData] = useState(null);
   const [isSaved, setIsSaved] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = React.useRef(null);
 
   // Extract username from email if needed
@@ -96,17 +97,74 @@ export default memo(function ProfilePage({ user, onBack, onProfileSave }) {
     }));
   };
 
-  const handlePhotoChange = (e) => {
+  const handlePhotoChange = async (e) => {
     const file = e.target.files?.[0];
-    if (file) {
+    if (!file || !user?.uid) return;
+
+    setIsUploading(true);
+    try {
+      // Show preview immediately using local preview
       const reader = new FileReader();
-      reader.onloadend = () => {
+      reader.onloadend = async () => {
+        const localPreview = reader.result;
+        
+        // Display preview immediately
         setFormData((prev) => ({
           ...prev,
-          photo: reader.result,
+          photo: localPreview,
         }));
+
+        // Upload to Firebase Storage and Firestore in parallel
+        const photoUrl = await AuthService.uploadProfilePhoto(user.uid, file);
+        
+        if (photoUrl) {
+          // Update with actual URL from Storage
+          setFormData((prev) => ({
+            ...prev,
+            photo: photoUrl,
+          }));
+
+          // Save to Firestore immediately with URL
+          const profileData = {
+            username: formData.username,
+            prevUsername: formData.username,
+            photo: photoUrl,
+            phone: formData.phone,
+            phoneExt: formData.phoneExt,
+            sex: formData.sex,
+            dob: formData.dob,
+            age: formData.age,
+            height: formData.height,
+            weight: formData.weight,
+          };
+
+          const userProfileKey = `profile_${user.uid}`;
+          localStorage.setItem(userProfileKey, JSON.stringify(profileData));
+          
+          if (user.email) {
+            AuthService.saveUserProfile(user.uid, user.email, profileData).catch((err) => {
+              console.error("Error saving profile to Firestore:", err);
+            });
+          }
+
+          // Update parent with new photo URL
+          const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
+          const updatedUser = {
+            ...currentUser,
+            photo: photoUrl,
+          };
+          localStorage.setItem("currentUser", JSON.stringify(updatedUser));
+          
+          if (onProfileSave) {
+            onProfileSave(updatedUser);
+          }
+        }
       };
       reader.readAsDataURL(file);
+    } catch (err) {
+      console.error("Error uploading photo:", err);
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -114,8 +172,11 @@ export default memo(function ProfilePage({ user, onBack, onProfileSave }) {
     fileInputRef.current?.click();
   };
 
-  const handlePhotoRemove = (e) => {
+  const handlePhotoRemove = async (e) => {
     e.stopPropagation();
+    if (user?.uid) {
+      await AuthService.deleteProfilePhoto(user.uid);
+    }
     setFormData((prev) => ({
       ...prev,
       photo: null,
@@ -195,7 +256,7 @@ export default memo(function ProfilePage({ user, onBack, onProfileSave }) {
         <form className="profile-form" onSubmit={(e) => e.preventDefault()}>
           {/* Profile Photo */}
           <div className="profile-photo-section">
-            <div className="profile-photo-container" onClick={handlePhotoClick}>
+            <div className="profile-photo-container" onClick={handlePhotoClick} style={{ opacity: isUploading ? 0.6 : 1, cursor: isUploading ? 'wait' : 'pointer' }}>
               {formData.photo ? (
                 <>
                   <img
@@ -209,17 +270,26 @@ export default memo(function ProfilePage({ user, onBack, onProfileSave }) {
                     onClick={handlePhotoRemove}
                     aria-label="Remove photo"
                     title="Remove photo"
+                    disabled={isUploading}
                   >
                     ✕
                   </button>
                 </>
               ) : (
                 <div className="profile-photo-placeholder">
-                  <svg className="profile-photo-avatar" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.5" />
-                    <path d="M4 20c0-4.418 3.582-8 8-8s8 3.582 8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                  </svg>
-                  <p className="profile-photo-text">Upload Photo</p>
+                  {isUploading ? (
+                    <div style={{ textAlign: 'center' }}>
+                      <p style={{ color: 'var(--text-muted)', fontSize: '12px' }}>Uploading...</p>
+                    </div>
+                  ) : (
+                    <>
+                      <svg className="profile-photo-avatar" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.5" />
+                        <path d="M4 20c0-4.418 3.582-8 8-8s8 3.582 8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                      </svg>
+                      <p className="profile-photo-text">Upload Photo</p>
+                    </>
+                  )}
                 </div>
               )}
             </div>
@@ -228,6 +298,7 @@ export default memo(function ProfilePage({ user, onBack, onProfileSave }) {
               type="file"
               accept="image/*"
               onChange={handlePhotoChange}
+              disabled={isUploading}
               style={{ display: "none" }}
             />
           </div>

@@ -1,5 +1,6 @@
 import { auth } from "../../firebase";
 import { db } from "../../firebase";
+import { storage } from "../../firebase";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -7,6 +8,7 @@ import {
   sendPasswordResetEmail,
 } from "firebase/auth";
 import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { sanitizeString, isValidEmail, checkRateLimit, clearRateLimit } from "../../utils/security";
 
 const mapError = (e) => {
@@ -344,6 +346,69 @@ const AuthService = {
         success: false,
         error: mappedError,
       };
+    }
+  },
+
+  // Upload profile photo to Firebase Storage (with compression)
+  async uploadProfilePhoto(uid, file) {
+    if (!storage || !file) return null;
+    try {
+      // Compress image before upload
+      const compressedBlob = await this.compressImage(file);
+      const storageRef = ref(storage, `profile_photos/${uid}`);
+      await uploadBytes(storageRef, compressedBlob);
+      const photoUrl = await getDownloadURL(storageRef);
+      return photoUrl;
+    } catch (e) {
+      console.error("Error uploading profile photo:", e);
+      return null;
+    }
+  },
+
+  // Compress image to reduce upload time
+  async compressImage(file) {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+
+          // Resize if larger than 800px
+          if (width > 800 || height > 800) {
+            const ratio = Math.min(800 / width, 800 / height);
+            width *= ratio;
+            height *= ratio;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Convert to blob with quality 0.7 (70%)
+          canvas.toBlob(
+            (blob) => resolve(blob || file),
+            'image/jpeg',
+            0.7
+          );
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  },
+
+  // Delete profile photo from Firebase Storage
+  async deleteProfilePhoto(uid) {
+    if (!storage) return;
+    try {
+      const storageRef = ref(storage, `profile_photos/${uid}`);
+      await deleteObject(storageRef);
+    } catch (e) {
+      console.error("Error deleting profile photo:", e);
     }
   },
 };
