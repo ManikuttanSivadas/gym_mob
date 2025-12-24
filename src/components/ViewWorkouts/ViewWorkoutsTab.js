@@ -316,9 +316,28 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts, isLoading = false })
           if (w.id !== deleteTarget.workoutId) return w;
           const exercises = (w.exercises || []).filter(e => e.id !== deleteTarget.exerciseId);
           return { ...w, exercises };
-        })
-        .filter(w => (w.exercises || []).length > 0);
-      onUpdateWorkouts && onUpdateWorkouts(updatedWorkouts);
+        });
+      
+      // Check if any workout becomes empty
+      const workoutsWithEmptyExercises = updatedWorkouts.filter(w => (w.exercises || []).length === 0);
+      
+      if (workoutsWithEmptyExercises.length > 0) {
+        const workoutName = workoutsWithEmptyExercises[0].name || "Unnamed";
+        const confirmed = window.confirm(
+          `"${workoutName}" has no exercises left. Deleting the last exercise will remove the entire workout. Continue?`
+        );
+        if (!confirmed) {
+          setShowDeleteModal(false);
+          setDeleteTarget(null);
+          return;
+        }
+        // Delete the entire workout
+        const finalWorkouts = updatedWorkouts.filter(w => (w.exercises || []).length > 0);
+        onUpdateWorkouts && onUpdateWorkouts(finalWorkouts);
+      } else {
+        // Just remove the exercise, workout still has exercises
+        onUpdateWorkouts && onUpdateWorkouts(updatedWorkouts);
+      }
     } else if (deleteTarget.type === "workout") {
       const updatedWorkouts = workouts.filter(w => w.id !== deleteTarget.workoutId);
       onUpdateWorkouts && onUpdateWorkouts(updatedWorkouts);
@@ -459,7 +478,7 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts, isLoading = false })
                   </div>
                 </div>
 
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
+                <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8 }}>
                   <button
                     type="button"
                     className="btn-edit"
@@ -473,6 +492,24 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts, isLoading = false })
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--text-primary)" }}>
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                       <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-delete"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDeleteTarget({ type: "workout", workoutId: workout.id });
+                      setShowDeleteModal(true);
+                    }}
+                    title="Delete workout"
+                    style={{ width: 40, height: 40, borderRadius: 8, padding: 6, background: "transparent", border: "none", color: "var(--text-primary)" }}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ color: "rgba(239, 68, 68, 0.8)" }}>
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                      <line x1="10" y1="11" x2="10" y2="17" />
+                      <line x1="14" y1="11" x2="14" y2="17" />
                     </svg>
                   </button>
                   <button
@@ -601,10 +638,6 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts, isLoading = false })
                       </div>
                     </div>
                   )}
-
-                  <div className="add-exercise-prompt" style={{ marginTop: 16, padding: 12, borderRadius: 8, background: "rgba(0,0,0,0.02)", cursor: "pointer", textAlign: "center" }} onClick={() => setEditingExercise({ workoutId: workout.id, exerciseId: null })}>
-                    <strong style={{ color: "var(--text-primary)" }}>+ Add Exercise</strong>
-                  </div>
                 </>
               )}
             </li>
@@ -945,9 +978,28 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts, isLoading = false })
                           <button 
                             type="button"
                             onClick={() => {
+                              const remainingExercises = (editingWorkoutData?.exercises || []).filter(ex => ex.id !== exercise.id);
+                              
+                              // If this is the last exercise, delete the entire workout
+                              if (remainingExercises.length === 0) {
+                                const confirmed = window.confirm(
+                                  "This is the last exercise in the workout. Deleting it will remove the entire workout. Continue?"
+                                );
+                                if (!confirmed) return;
+                                
+                                // Delete the entire workout
+                                const updatedWorkouts = workouts.filter(w => w.id !== editingWorkoutData.id);
+                                onUpdateWorkouts && onUpdateWorkouts(updatedWorkouts);
+                                
+                                // Exit edit mode
+                                setEditingWorkout(null);
+                                setEditingWorkoutData(null);
+                                return;
+                              }
+                              
                               const updated = {
                                 ...editingWorkoutData,
-                                exercises: (editingWorkoutData?.exercises || []).filter(ex => ex.id !== exercise.id)
+                                exercises: remainingExercises
                               };
                               setEditingWorkoutData(updated);
                             }}
