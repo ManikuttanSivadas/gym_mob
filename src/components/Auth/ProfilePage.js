@@ -26,6 +26,22 @@ export default memo(function ProfilePage({ user, onBack, onProfileSave }) {
     return email ? email.split("@")[0] : "";
   };
 
+  // Calculate age from date of birth
+  const calculateAge = (dob) => {
+    if (!dob) return "";
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    // Adjust age if birthday hasn't occurred this year
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    
+    return age >= 0 ? age : "";
+  };
+
   useEffect(() => {
     // Prefill form with user data
     if (user) {
@@ -44,7 +60,7 @@ export default memo(function ProfilePage({ user, onBack, onProfileSave }) {
         phoneExt: user.phoneExt || "",
         sex: user.sex || "",
         dob: user.dob || "",
-        age: user.age || "",
+        age: calculateAge(user.dob) || user.age || "",
         height: user.height || "",
         weight: user.weight || "",
         photo: user.photo || null,
@@ -60,6 +76,7 @@ export default memo(function ProfilePage({ user, onBack, onProfileSave }) {
             setFormData((prev) => ({
               ...prev,
               ...firestoreProfile,
+              age: calculateAge(firestoreProfile.dob) || firestoreProfile.age || "",
             }));
             setOriginalData(firestoreProfile);
             return;
@@ -78,6 +95,7 @@ export default memo(function ProfilePage({ user, onBack, onProfileSave }) {
           setFormData((prev) => ({
             ...prev,
             ...parsed,
+            age: calculateAge(parsed.dob) || parsed.age || "",
           }));
           setOriginalData(parsed);
         }
@@ -89,12 +107,32 @@ export default memo(function ProfilePage({ user, onBack, onProfileSave }) {
     loadProfile();
   }, [user]);
 
+  // Auto-calculate age when DOB changes
+  useEffect(() => {
+    if (formData.dob) {
+      const calculatedAge = calculateAge(formData.dob);
+      setFormData((prev) => ({
+        ...prev,
+        age: calculatedAge,
+      }));
+    }
+  }, [formData.dob]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => {
+      const updated = {
+        ...prev,
+        [name]: value,
+      };
+      
+      // Auto-calculate age when DOB changes
+      if (name === "dob") {
+        updated.age = calculateAge(value);
+      }
+      
+      return updated;
+    });
   };
 
   const handlePhotoChange = async (e) => {
@@ -398,9 +436,9 @@ export default memo(function ProfilePage({ user, onBack, onProfileSave }) {
                 type="number"
                 name="age"
                 value={formData.age}
-                onChange={handleInputChange}
+                disabled
                 placeholder="e.g., 25"
-                className="profile-input"
+                className="profile-input-disabled"
               />
             </div>
           </div>

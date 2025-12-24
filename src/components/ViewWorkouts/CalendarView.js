@@ -9,6 +9,7 @@ const CalendarView = memo(function CalendarView({
   expandedCalendarWorkouts,
   setExpandedCalendarWorkouts,
   handleEditWorkout,
+  handleDeleteWorkout,
 }) {
   function getDaysInMonth(date) {
     return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
@@ -199,7 +200,7 @@ const CalendarView = memo(function CalendarView({
               const isExpanded = expandedCalendarWorkouts.includes(workout.id);
               return (
                 <li key={workout.id} className="workout-item" style={{ marginBottom: 12 }}>
-                  <div className="workout-header" style={{ display: "grid", gridTemplateColumns: "1fr auto auto", alignItems: "center", gap: 12, cursor: "pointer" }} onClick={() => toggleCalendarWorkoutExpand(workout.id)}>
+                  <div className="workout-header" style={{ display: "grid", gridTemplateColumns: "1fr auto auto auto", alignItems: "center", gap: 12, cursor: "pointer" }} onClick={() => toggleCalendarWorkoutExpand(workout.id)}>
                     <div className="workout-name-badge" style={{ textAlign: "left", background: "transparent", padding: 0, borderRadius: 0 }}>
                       <div className="workout-name-text" style={{ fontSize: 16, fontWeight: 600, color: "var(--text-primary)" }}>{workout.name || "Workout"}</div>
                       <div className="workout-date-info" style={{ marginTop: 6 }}>
@@ -222,6 +223,24 @@ const CalendarView = memo(function CalendarView({
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--text-primary)" }}>
                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                      </svg>
+                    </button>
+
+                    <button
+                      type="button"
+                      className="btn-delete"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteWorkout(workout.id, workout.name);
+                      }}
+                      title="Delete workout"
+                      style={{ width: 40, height: 40, borderRadius: 8, padding: 6, background: "transparent", border: "none", color: "var(--text-primary)" }}
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ color: "#ef4444" }}>
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                        <line x1="14" y1="11" x2="14" y2="17"></line>
                       </svg>
                     </button>
 
