@@ -31,8 +31,23 @@ function WorkoutListItem({
   handleEditExercise
 }) {
   const handleAddSetToEdit = () => {
-    if (newSetWeight === "" || newSetReps === "") { alert("Enter weight and reps."); return; }
-    const set = { id: generateId(), weight: Number(newSetWeight), reps: Number(newSetReps) };
+    const weightNum = Number(newSetWeight);
+    const repsNum = Number(newSetReps);
+    
+    if (newSetWeight === "" || newSetReps === "" || isNaN(weightNum) || isNaN(repsNum)) { 
+      alert("Enter valid weight and reps."); 
+      return; 
+    }
+    if (weightNum < 0 || repsNum < 0) {
+      alert("Weight and reps must be positive numbers.");
+      return;
+    }
+    if (repsNum === 0) {
+      alert("Reps must be at least 1.");
+      return;
+    }
+    
+    const set = { id: generateId(), weight: weightNum, reps: repsNum };
     setEditingSets(prev => [...prev, set]);
     setNewSetWeight(""); setNewSetReps("");
   };

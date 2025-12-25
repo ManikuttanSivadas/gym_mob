@@ -223,14 +223,26 @@ function LogWorkoutTab({
   }
 
   function handleAddSet(weight, reps) {
-    if (!weight || !reps) {
-      alert("Please enter both weight and reps");
+    const weightNum = Number(weight);
+    const repsNum = Number(reps);
+    
+    if (weight === "" || reps === "" || isNaN(weightNum) || isNaN(repsNum)) {
+      alert("Please enter valid weight and reps");
       return;
     }
+    if (weightNum < 0 || repsNum < 0) {
+      alert("Weight and reps must be positive numbers");
+      return;
+    }
+    if (repsNum === 0) {
+      alert("Reps must be at least 1");
+      return;
+    }
+    
     const newSet = {
       id: generateId(),
-      weight: Number(weight),
-      reps: Number(reps),
+      weight: weightNum,
+      reps: repsNum,
     };
     if (editingExercise) {
       setEditingSets([...editingSets, newSet]);
