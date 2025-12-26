@@ -19,6 +19,7 @@ export default memo(function ProfilePage({ user, onBack, onProfileSave }) {
   const [originalData, setOriginalData] = useState(null);
   const [isSaved, setIsSaved] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const fileInputRef = React.useRef(null);
 
   // Extract username from email if needed
@@ -69,38 +70,43 @@ export default memo(function ProfilePage({ user, onBack, onProfileSave }) {
 
     // Load saved profile data from Firestore first, then localStorage
     const loadProfile = async () => {
-      if (user && user.uid && user.email) {
+      try {
+        if (user && user.uid && user.email) {
+          try {
+            const firestoreProfile = await AuthService.getUserProfile(user.uid, user.email);
+            if (firestoreProfile) {
+              setFormData((prev) => ({
+                ...prev,
+                ...firestoreProfile,
+                age: calculateAge(firestoreProfile.dob) || firestoreProfile.age || "",
+              }));
+              setOriginalData(firestoreProfile);
+              setIsLoading(false);
+              return;
+            }
+          } catch (e) {
+            // silently handle Firestore load errors
+          }
+        }
+
+        // Fallback to localStorage if Firestore doesn't have data
         try {
-          const firestoreProfile = await AuthService.getUserProfile(user.uid, user.email);
-          if (firestoreProfile) {
+          const userProfileKey = user?.uid ? `profile_${user.uid}` : "userProfile";
+          const savedProfile = localStorage.getItem(userProfileKey);
+          if (savedProfile) {
+            const parsed = JSON.parse(savedProfile);
             setFormData((prev) => ({
               ...prev,
-              ...firestoreProfile,
-              age: calculateAge(firestoreProfile.dob) || firestoreProfile.age || "",
+              ...parsed,
+              age: calculateAge(parsed.dob) || parsed.age || "",
             }));
-            setOriginalData(firestoreProfile);
-            return;
+            setOriginalData(parsed);
           }
         } catch (e) {
-          // silently handle Firestore load errors
+          // silently handle localStorage parse errors
         }
-      }
-
-      // Fallback to localStorage if Firestore doesn't have data
-      try {
-        const userProfileKey = user?.uid ? `profile_${user.uid}` : "userProfile";
-        const savedProfile = localStorage.getItem(userProfileKey);
-        if (savedProfile) {
-          const parsed = JSON.parse(savedProfile);
-          setFormData((prev) => ({
-            ...prev,
-            ...parsed,
-            age: calculateAge(parsed.dob) || parsed.age || "",
-          }));
-          setOriginalData(parsed);
-        }
-      } catch (e) {
-        // silently handle localStorage parse errors
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -277,6 +283,43 @@ export default memo(function ProfilePage({ user, onBack, onProfileSave }) {
       // silently handle save errors
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="profile-page-container">
+        <div className="profile-page">
+          <div className="profile-loading-skeleton">
+            <div className="skeleton skeleton-photo"></div>
+            
+            <div className="skeleton-group">
+              <div className="skeleton skeleton-input"></div>
+              <div className="skeleton skeleton-label"></div>
+            </div>
+            
+            <div className="skeleton-group">
+              <div className="skeleton skeleton-input"></div>
+              <div className="skeleton skeleton-label"></div>
+            </div>
+            
+            <div className="skeleton-group">
+              <div className="skeleton skeleton-input"></div>
+              <div className="skeleton skeleton-label"></div>
+            </div>
+            
+            <div className="skeleton-group">
+              <div className="skeleton skeleton-input"></div>
+              <div className="skeleton skeleton-label"></div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <div className="skeleton skeleton-input" style={{ flex: 1 }}></div>
+              <div className="skeleton skeleton-input" style={{ flex: 1 }}></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="profile-page-container">

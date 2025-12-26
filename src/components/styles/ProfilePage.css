@@ -393,3 +393,56 @@
     font-size: 14px;
   }
 }
+/* Loading Skeleton Styles */
+.profile-loading-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px 0;
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--bg-input) 0%,
+    var(--bg-tertiary) 50%,
+    var(--bg-input) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.skeleton-photo {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  margin: 0 auto 20px;
+}
+
+.skeleton-input {
+  height: 48px;
+  width: 100%;
+  border-radius: 8px;
+}
+
+.skeleton-label {
+  height: 16px;
+  width: 60%;
+  margin-top: 12px;
+  border-radius: 4px;
+}
+
+.skeleton-group {
+  display: flex;
+  flex-direction: column;
+}

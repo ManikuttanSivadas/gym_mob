@@ -1,4 +1,4 @@
-import React, { useState, memo } from "react";
+import React, { useState, useEffect, memo } from "react";
 import AlertModal from "../Common/AlertModal";
 import { useAlert } from "../../hooks/useAlert";
 
@@ -126,7 +126,10 @@ function LogWorkoutTab({
   onAddWorkout,
 }) {
   const { alert, showError, hideAlert } = useAlert();
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(() => {
+    const savedStep = localStorage.getItem("logWorkoutStep");
+    return savedStep ? parseInt(savedStep, 10) : 1;
+  });
   const [exerciseInput, setExerciseInput] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [editingExercise, setEditingExercise] = useState(null);
@@ -149,6 +152,11 @@ function LogWorkoutTab({
     const day = String(today.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
   }
+
+  // Save current step to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("logWorkoutStep", currentStep.toString());
+  }, [currentStep]);
 
   function getMinDate() {
     const oneYearAgo = new Date();
