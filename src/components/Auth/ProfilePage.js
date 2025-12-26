@@ -425,8 +425,13 @@ export default memo(function ProfilePage({ user, onBack, onProfileSave }) {
                 name="dob"
                 value={formData.dob}
                 onChange={handleInputChange}
+                min={new Date(new Date().getFullYear() - 120, new Date().getMonth(), new Date().getDate()).toISOString().split('T')[0]}
+                max={new Date(new Date().getFullYear() - 12, new Date().getMonth(), new Date().getDate()).toISOString().split('T')[0]}
                 className="profile-input"
               />
+              <small style={{ color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>
+                Minimum age required: 12 years
+              </small>
             </div>
 
             <div className="profile-form-group">
