@@ -1,4 +1,6 @@
 import React, { useState, memo } from "react";
+import AlertModal from "../Common/AlertModal";
+import { useAlert } from "../../hooks/useAlert";
 
 // Dummy exercise templates (import from a constants file in real usage)
 const exerciseTemplates = [
@@ -123,6 +125,7 @@ function LogWorkoutTab({
   setCurrentSets,
   onAddWorkout,
 }) {
+  const { alert, showError, hideAlert } = useAlert();
   const [currentStep, setCurrentStep] = useState(1);
   const [exerciseInput, setExerciseInput] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -164,11 +167,11 @@ function LogWorkoutTab({
 
   function handleContinueToStep2() {
     if (selectedDate > getTodayDate()) {
-      alert("Cannot select a future date. Please select today or a past date.");
+      showError("Cannot select a future date. Please select today or a past date.");
       return;
     }
     if (!workoutName.trim()) {
-      alert("Please enter a workout name");
+      showError("Please enter a workout name");
       return;
     }
     setCurrentStep(2);
@@ -209,7 +212,7 @@ function LogWorkoutTab({
   function handleSelectExercise() {
     const exerciseName = exerciseInput.trim();
     if (!exerciseName) {
-      alert("Please enter an exercise name");
+      showError("Please enter an exercise name");
       return;
     }
     setActiveExercise({
@@ -227,15 +230,15 @@ function LogWorkoutTab({
     const repsNum = Number(reps);
     
     if (weight === "" || reps === "" || isNaN(weightNum) || isNaN(repsNum)) {
-      alert("Please enter valid weight and reps");
+      showError("Please enter valid weight and reps");
       return;
     }
     if (weightNum < 0 || repsNum < 0) {
-      alert("Weight and reps must be positive numbers");
+      showError("Weight and reps must be positive numbers");
       return;
     }
     if (repsNum === 0) {
-      alert("Reps must be at least 1");
+      showError("Reps must be at least 1");
       return;
     }
     
@@ -262,7 +265,7 @@ function LogWorkoutTab({
   function handleFinishExercise() {
     const sets = editingExercise ? editingSets : currentSets;
     if (sets.length === 0) {
-      alert("Please add at least one set");
+      showError("Please add at least one set");
       return;
     }
     const exerciseWithSets = {
@@ -657,6 +660,16 @@ function LogWorkoutTab({
         onClose={() => setShowSaveModal(false)}
         onConfirm={handleConfirmSave}
       />
+
+      {/* Alert Modal */}
+      {alert && (
+        <AlertModal
+          message={alert.message}
+          type={alert.type}
+          autoCloseDuration={alert.autoCloseDuration}
+          onClose={hideAlert}
+        />
+      )}
     </div>
   );
 }

@@ -1,0 +1,141 @@
+.alert-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--bg-modal-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(2px);
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.alert-modal {
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  padding: 24px;
+  max-width: 320px;
+  width: 90%;
+  animation: slideUp 0.3s ease-out;
+  border: 1px solid var(--border-light);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.alert-content {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.alert-icon {
+  font-size: 20px;
+  min-width: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+
+.alert-modal.error .alert-icon {
+  color: #dc2626;
+}
+
+.alert-modal.success .alert-icon {
+  color: #16a34a;
+}
+
+.alert-modal.info .alert-icon {
+  color: #2563eb;
+}
+
+.alert-modal.warning .alert-icon {
+  color: #f59e0b;
+}
+
+.alert-message {
+  flex: 1;
+}
+
+.alert-message p {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 14px;
+  line-height: 1.5;
+  word-wrap: break-word;
+}
+
+.alert-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.alert-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  transition: all 0.2s ease;
+  min-width: 80px;
+}
+
+.alert-btn-primary {
+  background: var(--btn-primary);
+  color: white;
+}
+
+.alert-btn-primary:hover {
+  background: var(--btn-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.alert-btn-primary:active {
+  transform: translateY(0);
+}
+
+/* Dark theme support */
+[data-theme="dark"] .alert-modal.error .alert-icon {
+  color: #ef5350;
+}
+
+[data-theme="dark"] .alert-modal.success .alert-icon {
+  color: #66bb6a;
+}
+
+[data-theme="dark"] .alert-modal.info .alert-icon {
+  color: #64b5f6;
+}
+
+[data-theme="dark"] .alert-modal.warning .alert-icon {
+  color: #ffa726;
+}

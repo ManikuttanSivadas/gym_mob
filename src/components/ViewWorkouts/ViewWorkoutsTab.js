@@ -6,6 +6,8 @@ import DeleteModal from "./DeleteModal";
 import WorkoutListItem from "./WorkoutListItem";
 import ExerciseEditModal from "./ExerciseEditModal";
 import WorkoutEditModal from "./WorkoutEditModal";
+import AlertModal from "../Common/AlertModal";
+import { useAlert } from "../../hooks/useAlert";
 
 // Helper: generate simple unique id for new sets
 function generateId() {
@@ -15,6 +17,7 @@ function generateId() {
 function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts, isLoading = false }) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const { alert, showError, hideAlert } = useAlert();
 
   // month filter state (array of "YYYY-MM")
   const [filterMonths, setFilterMonths] = useState([]);
@@ -148,8 +151,8 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts, isLoading = false })
 
   function handleSaveExerciseChanges() {
     if (!editingExercise) return;
-    if (!editExerciseName.trim()) { alert("Enter exercise name."); return; }
-    if (editingSets.length === 0) { alert("Add at least one set."); return; }
+    if (!editExerciseName.trim()) { showError("Enter exercise name."); return; }
+    if (editingSets.length === 0) { showError("Add at least one set."); return; }
     const updated = workouts.map(w => {
       if (w.id !== editingExercise.workoutId) return w;
       // If exerciseId is null, we're adding a new exercise
@@ -178,9 +181,9 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts, isLoading = false })
 
   function handleSaveWorkoutChanges() {
     if (!editingWorkout || !editingWorkoutData) return;
-    if (!editWorkoutName.trim()) { alert("Enter workout name."); return; }
+    if (!editWorkoutName.trim()) { showError("Enter workout name."); return; }
     if (!editingWorkoutData.exercises || editingWorkoutData.exercises.length === 0) { 
-      alert("Add at least one exercise."); 
+      showError("Add at least one exercise."); 
       return; 
     }
     
@@ -190,13 +193,13 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts, isLoading = false })
       
       // Check exercise name
       if (!exercise.name || exercise.name.trim() === "") {
-        alert("Empty record: Exercise name is mandatory.");
+        showError("Empty record: Exercise name is mandatory.");
         return;
       }
       
       // Check if exercise has at least one set
       if (!exercise.sets || exercise.sets.length === 0) {
-        alert(`Exercise "${exercise.name}": Please add at least one set.`);
+        showError(`Exercise "${exercise.name}": Please add at least one set.`);
         return;
       }
       
@@ -205,22 +208,22 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts, isLoading = false })
         const set = exercise.sets[j];
         
         if (set.weight === "" || set.weight === null || set.weight === undefined || isNaN(Number(set.weight))) {
-          alert(`Exercise "${exercise.name}" - Set ${j + 1}: Weight is mandatory.`);
+          showError(`Exercise "${exercise.name}" - Set ${j + 1}: Weight is mandatory.`);
           return;
         }
         
         if (set.reps === "" || set.reps === null || set.reps === undefined || isNaN(Number(set.reps))) {
-          alert(`Exercise "${exercise.name}" - Set ${j + 1}: Reps is mandatory.`);
+          showError(`Exercise "${exercise.name}" - Set ${j + 1}: Reps is mandatory.`);
           return;
         }
         
         if (Number(set.weight) < 0 || Number(set.reps) < 0) {
-          alert(`Exercise "${exercise.name}" - Set ${j + 1}: Weight and reps must be positive.`);
+          showError(`Exercise "${exercise.name}" - Set ${j + 1}: Weight and reps must be positive.`);
           return;
         }
         
         if (Number(set.reps) === 0) {
-          alert(`Exercise "${exercise.name}" - Set ${j + 1}: Reps must be at least 1.`);
+          showError(`Exercise "${exercise.name}" - Set ${j + 1}: Reps must be at least 1.`);
           return;
         }
       }
@@ -404,6 +407,7 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts, isLoading = false })
               onSaveExerciseChanges={handleSaveExerciseChanges}
               onCancelExerciseEdit={handleCancelExerciseEdit}
               handleEditExercise={handleEditExercise}
+              onShowError={showError}
             />
           );
         })}
@@ -435,6 +439,7 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts, isLoading = false })
         getWorkoutsForDate={getWorkoutsForDate}
         selectedDate={selectedDate}
         handleEditExercise={handleEditExercise}
+        onShowError={showError}
       />
 
       {/* Edit Workout Modal */}
@@ -448,6 +453,16 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts, isLoading = false })
         onSave={handleSaveWorkoutChanges}
         onCancel={handleCancelWorkoutEdit}
       />
+
+      {/* Alert Modal */}
+      {alert && (
+        <AlertModal
+          message={alert.message}
+          type={alert.type}
+          autoCloseDuration={alert.autoCloseDuration}
+          onClose={hideAlert}
+        />
+      )}
     </div>
   );
 }

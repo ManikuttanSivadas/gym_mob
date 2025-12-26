@@ -28,22 +28,23 @@ function WorkoutListItem({
   onRemoveSet,
   onSaveExerciseChanges,
   onCancelExerciseEdit,
-  handleEditExercise
+  handleEditExercise,
+  onShowError = (msg) => alert(msg)
 }) {
   const handleAddSetToEdit = () => {
     const weightNum = Number(newSetWeight);
     const repsNum = Number(newSetReps);
     
     if (newSetWeight === "" || newSetReps === "" || isNaN(weightNum) || isNaN(repsNum)) { 
-      alert("Enter valid weight and reps."); 
+      onShowError("Enter valid weight and reps."); 
       return; 
     }
     if (weightNum < 0 || repsNum < 0) {
-      alert("Weight and reps must be positive numbers.");
+      onShowError("Weight and reps must be positive numbers.");
       return;
     }
     if (repsNum === 0) {
-      alert("Reps must be at least 1.");
+      onShowError("Reps must be at least 1.");
       return;
     }
     
