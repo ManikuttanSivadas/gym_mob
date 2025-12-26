@@ -517,6 +517,7 @@ function LogWorkoutTab({
     setEditingExercise(exercise);
     setEditingSets([...exercise.sets]);
     setEditingName(exercise.name);
+    window.scrollTo(0, 0);
   }
 
   function handleSaveWorkout() {
@@ -536,6 +537,7 @@ function LogWorkoutTab({
       return;
     }
     setShowSaveModal(true);
+    window.scrollTo(0, 0);
   }
 
   function handleConfirmSave() {
