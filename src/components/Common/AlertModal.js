@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./AlertModal.css";
 
-function AlertModal({ message, onClose, type = "info", autoClose = true, autoCloseDuration = 3000 }) {
+function AlertModal({ message, onClose, type = "info", autoClose = false, autoCloseDuration = 3000 }) {
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
