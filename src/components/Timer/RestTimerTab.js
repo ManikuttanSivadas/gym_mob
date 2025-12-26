@@ -90,57 +90,61 @@ function RestTimerTab({
 }
 
 function RestTimer({ seconds, setSeconds, running, setRunning, inputDigits, setInputDigits, intervalRef }) {
+  const [hours, setHours] = useState('00');
+  const [minutes, setMinutes] = useState('00');
+  const [secs, setSecs] = useState('00');
+
   const formatTime = (totalSeconds) => {
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const secs = totalSeconds % 60;
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  // Format digits to HH:MM:SS display
-  const formatDisplayValue = (digits) => {
-    if (!digits) return '00:00:00';
-    
-    if (digits.length <= 2) {
-      return `00:00:${digits.padStart(2, '0')}`;
-    } else if (digits.length <= 4) {
-      const mins = Math.floor(parseInt(digits, 10) / 100);
-      const secs = parseInt(digits, 10) % 100;
-      return `00:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    } else {
-      const hours = Math.floor(parseInt(digits, 10) / 10000);
-      const mins = Math.floor((parseInt(digits, 10) % 10000) / 100);
-      const secs = parseInt(digits, 10) % 100;
-      return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    }
+  // Handle 2-digit input for hours
+  const handleHoursChange = (e) => {
+    let value = e.target.value.replace(/\D/g, '').slice(0, 2);
+    setHours(value);
+    updateSeconds(value, minutes, secs);
   };
 
-  // Calculate total seconds from digits
-  const calculateSeconds = (digits) => {
-    if (!digits) return 0;
-    
-    if (digits.length <= 2) {
-      return parseInt(digits, 10);
-    } else if (digits.length <= 4) {
-      const mins = Math.floor(parseInt(digits, 10) / 100);
-      const secs = parseInt(digits, 10) % 100;
-      return mins * 60 + secs;
-    } else {
-      const hours = Math.floor(parseInt(digits, 10) / 10000);
-      const mins = Math.floor((parseInt(digits, 10) % 10000) / 100);
-      const secs = parseInt(digits, 10) % 100;
-      return hours * 3600 + mins * 60 + secs;
-    }
+  const handleHoursFocus = () => {
+    setHours('');
   };
 
-  // Handle input change
-  const handleInputChange = (e) => {
-    const value = e.target.value;
-    const digitsOnly = value.replace(/\D/g, '');
-    const limited = digitsOnly.slice(0, 6);
-    
-    setInputDigits(limited);
-    setSeconds(calculateSeconds(limited));
+  // Handle 2-digit input for minutes
+  const handleMinutesChange = (e) => {
+    let value = e.target.value.replace(/\D/g, '').slice(0, 2);
+    // Cap minutes at 59
+    if (parseInt(value) > 59) value = '59';
+    setMinutes(value);
+    updateSeconds(hours, value, secs);
+  };
+
+  const handleMinutesFocus = () => {
+    setMinutes('');
+  };
+
+  // Handle 2-digit input for seconds
+  const handleSecondsChange = (e) => {
+    let value = e.target.value.replace(/\D/g, '').slice(0, 2);
+    // Cap seconds at 59
+    if (parseInt(value) > 59) value = '59';
+    setSecs(value);
+    updateSeconds(hours, minutes, value);
+  };
+
+  const handleSecondsFocus = () => {
+    setSecs('');
+  };
+
+  // Update total seconds from h:m:s values
+  const updateSeconds = (h, m, s) => {
+    const h_num = parseInt(h) || 0;
+    const m_num = parseInt(m) || 0;
+    const s_num = parseInt(s) || 0;
+    const totalSecs = h_num * 3600 + m_num * 60 + s_num;
+    setSeconds(totalSecs);
   };
 
   // Timer finished notification
@@ -156,6 +160,17 @@ function RestTimer({ seconds, setSeconds, running, setRunning, inputDigits, setI
     }
   }, [seconds, running, setRunning]);
 
+  // Update display when timer is running
+  useEffect(() => {
+    if (running) {
+      const displayTime = formatTime(seconds);
+      const [h, m, s] = displayTime.split(':');
+      setHours(h);
+      setMinutes(m);
+      setSecs(s);
+    }
+  }, [seconds, running]);
+
   const handleStartTimer = () => {
     if (seconds > 0) {
       setRunning(true);
@@ -169,7 +184,9 @@ function RestTimer({ seconds, setSeconds, running, setRunning, inputDigits, setI
   const handleResetTimer = () => {
     setSeconds(0);
     setRunning(false);
-    setInputDigits('');
+    setHours('00');
+    setMinutes('00');
+    setSecs('00');
   };
 
   // Quick preset handlers
@@ -177,24 +194,14 @@ function RestTimer({ seconds, setSeconds, running, setRunning, inputDigits, setI
     setSeconds(totalSeconds);
     setRunning(false);
     
-    // Convert seconds to inputDigits format (HHMMSS)
-    const hours = Math.floor(totalSeconds / 3600);
-    const mins = Math.floor((totalSeconds % 3600) / 60);
-    const secs = totalSeconds % 60;
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
     
-    let digits = '';
-    if (hours > 0) {
-      digits = `${hours}${mins.toString().padStart(2, '0')}${secs.toString().padStart(2, '0')}`;
-    } else if (mins > 0) {
-      digits = `${mins}${secs.toString().padStart(2, '0')}`;
-    } else {
-      digits = secs.toString();
-    }
-    
-    setInputDigits(digits);
+    setHours(h.toString().padStart(2, '0'));
+    setMinutes(m.toString().padStart(2, '0'));
+    setSecs(s.toString().padStart(2, '0'));
   };
-
-  // Display value
 
   return (
     <div className="rest-timer-container">
@@ -230,17 +237,53 @@ function RestTimer({ seconds, setSeconds, running, setRunning, inputDigits, setI
         </button>
       </div>
 
-      {/* Single Input Box */}
-      <div className="rest-timer-input-wrapper">
-        <input
-          type="text"
-          className={`rest-timer-input-display ${running ? 'running' : ''}`}
-          value={running ? formatTime(seconds) : (inputDigits ? formatDisplayValue(inputDigits) : '00:00:00')}
-          onChange={!running ? handleInputChange : undefined}
-          disabled={running}
-          inputMode="numeric"
-          placeholder="00:00:00"
-        />
+      {/* Input Boxes for Hours, Minutes, Seconds */}
+      <div className="rest-timer-input-boxes">
+        <div className="rest-timer-input-group">
+          <label>Hours</label>
+          <input
+            type="text"
+            className="rest-timer-input-box"
+            value={hours}
+            onChange={handleHoursChange}
+            onFocus={handleHoursFocus}
+            disabled={running}
+            maxLength="2"
+            inputMode="numeric"
+          />
+        </div>
+        
+        <div className="rest-timer-separator">:</div>
+        
+        <div className="rest-timer-input-group">
+          <label>Minutes</label>
+          <input
+            type="text"
+            className="rest-timer-input-box"
+            value={minutes}
+            onChange={handleMinutesChange}
+            onFocus={handleMinutesFocus}
+            disabled={running}
+            maxLength="2"
+            inputMode="numeric"
+          />
+        </div>
+        
+        <div className="rest-timer-separator">:</div>
+        
+        <div className="rest-timer-input-group">
+          <label>Seconds</label>
+          <input
+            type="text"
+            className="rest-timer-input-box"
+            value={secs}
+            onChange={handleSecondsChange}
+            onFocus={handleSecondsFocus}
+            disabled={running}
+            maxLength="2"
+            inputMode="numeric"
+          />
+        </div>
       </div>
 
       {/* Control Buttons */}
