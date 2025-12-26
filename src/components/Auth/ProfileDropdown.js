@@ -31,27 +31,62 @@ export default function ProfileDropdown({ user, onLogout, onClose, isOpen, onPro
     <>
       <div className="profile-dropdown-overlay" onClick={onClose} />
       <div className="profile-dropdown">
-        {/* Profile Info - Clickable */}
+        {/* Profile Info - Avatar + Name/Email */}
         <button
           type="button"
-          className="profile-dropdown-header-btn"
           onClick={() => {
             onProfileClick && onProfileClick();
             onClose && onClose();
           }}
+          style={{
+            width: "100%",
+            padding: "12px",
+            background: "transparent",
+            border: "none",
+            textAlign: "left",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+            color: "var(--text-primary)"
+          }}
         >
-          <div className="profile-dropdown-header">
-            <div className="profile-dropdown-avatar">
-              {user && user.photo ? (
-                <img src={user.photo} alt="Profile" className="profile-dropdown-avatar-image" />
-              ) : (
-                initial
-              )}
-            </div>
-            <div className="profile-dropdown-info">
-              <div className="profile-dropdown-name">{displayName}</div>
-              <div className="profile-dropdown-email">{email}</div>
-            </div>
+          {/* Avatar */}
+          <div
+            style={{
+              width: "40px",
+              height: "40px",
+              borderRadius: "50%",
+              backgroundColor: "#10b981",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "white",
+              fontSize: "18px",
+              fontWeight: "bold",
+              flexShrink: 0
+            }}
+          >
+            {user?.photo ? (
+              <img
+                src={user.photo}
+                alt={displayName}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  borderRadius: "50%",
+                  objectFit: "cover"
+                }}
+              />
+            ) : (
+              initial
+            )}
+          </div>
+
+          {/* Name and Email */}
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: "14px", fontWeight: "500", color: "var(--text-primary)" }}>{displayName}</div>
+            <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>{email}</div>
           </div>
         </button>
 
