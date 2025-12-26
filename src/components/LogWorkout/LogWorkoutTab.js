@@ -1,5 +1,6 @@
 import React, { useState, useEffect, memo } from "react";
 import AlertModal from "../Common/AlertModal";
+import DeleteModal from "../ViewWorkouts/DeleteModal";
 import { useAlert } from "../../hooks/useAlert";
 
 // Dummy exercise templates (import from a constants file in real usage)
@@ -248,6 +249,8 @@ function LogWorkoutTab({
   const [editingSetWeight, setEditingSetWeight] = useState("");
   const [editingSetReps, setEditingSetReps] = useState("");
   const [editingSetExerciseId, setEditingSetExerciseId] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [exerciseToDelete, setExerciseToDelete] = useState(null);
 
   const [selectedDate, setSelectedDate] = useState(() => {
     const today = new Date();
@@ -482,9 +485,23 @@ function LogWorkoutTab({
       setCurrentSets([]);
     }
   }
-
   function handleRemoveExercise(exerciseId) {
-    setWorkoutExercises(workoutExercises.filter((ex) => ex.id !== exerciseId));
+    const exercise = workoutExercises.find(ex => ex.id === exerciseId);
+    setExerciseToDelete({ id: exerciseId, name: exercise?.name || 'Exercise' });
+    setShowDeleteModal(true);
+  }
+
+  function handleConfirmDeleteExercise() {
+    if (exerciseToDelete?.id) {
+      setWorkoutExercises(workoutExercises.filter((ex) => ex.id !== exerciseToDelete.id));
+    }
+    setShowDeleteModal(false);
+    setExerciseToDelete(null);
+  }
+
+  function handleCancelDeleteExercise() {
+    setShowDeleteModal(false);
+    setExerciseToDelete(null);
   }
 
   function handleEditExercise(exercise) {
@@ -895,6 +912,14 @@ function LogWorkoutTab({
         setReps={setEditingSetReps}
         onSave={handleSaveEditSet}
         onCancel={handleCancelEditSet}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <DeleteModal
+        showDeleteModal={showDeleteModal}
+        deleteTarget={{ type: "exercise", exerciseName: exerciseToDelete?.name }}
+        onConfirm={handleConfirmDeleteExercise}
+        onCancel={handleCancelDeleteExercise}
       />
 
       {/* Alert Modal */}
