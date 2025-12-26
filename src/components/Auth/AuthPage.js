@@ -86,7 +86,7 @@ function AuthPage({ onAuthSuccess, theme, onToggleTheme }) {
   return (
     <div className="auth-container">
       <div className="auth-header">
-        <h1>Strive</h1>
+        <h1>upTrace</h1>
         <p>{isLogin ? "Welcome back to your fitness journey" : "Start your fitness journey today"}</p>
       </div>
 

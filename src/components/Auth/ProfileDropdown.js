@@ -78,7 +78,7 @@ export default function ProfileDropdown({ user, onLogout, onClose, isOpen, onPro
           {knowUsOpen && (
             <div className="profile-dropdown-know-us-content">
               <p>
-                Strive is a modern fitness app designed to help you log
+                upTrace is a modern fitness app designed to help you log
                 workouts, track progress, and stay motivated.
               </p>
               <p>

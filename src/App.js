@@ -246,7 +246,7 @@ function App() {
       <div className="app-container">
         <div className="loading-container">
           <div className="loading-spinner"></div>
-          <div className="brand-logo">Strive</div>
+          <div className="brand-logo">upTrace</div>
           <p style={{ color: "var(--text-muted)", marginTop: "8px" }}>
             Loading your data...
           </p>
@@ -281,7 +281,7 @@ function App() {
   return (
     <div className="app-container">
       <div className="app-header">
-        <div className="brand-logo">Strive</div>
+        <div className="brand-logo">upTrace</div>
         <div className="app-header-controls">
           <ThemeToggle theme={theme} onToggleTheme={handleToggleTheme} />
           <div
@@ -358,7 +358,7 @@ function App() {
       )}
       {currentTab === 2 && <RestTimerTab />}
 
-      <footer>© 2025 Strive</footer>
+      <footer>© 2025 upTrace</footer>
     </div>
   );
 }
