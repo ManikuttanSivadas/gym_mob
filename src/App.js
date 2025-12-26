@@ -30,6 +30,23 @@ function App() {
   const [activeExercise, setActiveExercise] = useState(null);
   const [currentSets, setCurrentSets] = useState([]);
 
+  // Timer/Stopwatch state - moved to App level to persist across all tabs
+  const [timerSeconds, setTimerSeconds] = useState(0);
+  const [timerRunning, setTimerRunning] = useState(false);
+  const [timerInputDigits, setTimerInputDigits] = useState('');
+  const timerIntervalRef = useRef(null);
+
+  const [stopwatchTime, setStopwatchTime] = useState(0);
+  const [stopwatchRunning, setStopwatchRunning] = useState(false);
+  const [stopwatchLaps, setStopwatchLaps] = useState([]);
+  const stopwatchIntervalRef = useRef(null);
+
+  // Timer sub-tab state (0 = Rest Timer, 1 = Stopwatch) - persists across main tab changes
+  const [timerSubTab, setTimerSubTab] = useState(() => {
+    const savedSubTab = localStorage.getItem("timerSubTab");
+    return savedSubTab ? parseInt(savedSubTab, 10) : 0;
+  });
+
   // helper — safe avatar initial
   function getAvatarInitial(u) {
     const src = (u && (u.name || u.username || u.displayName || u.email)) || "";
@@ -126,6 +143,14 @@ function App() {
     return () => clearTimeout(timer);
   }, [theme]);
 
+  // Persist timer sub-tab selection to localStorage
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      localStorage.setItem("timerSubTab", timerSubTab.toString());
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [timerSubTab]);
+
   // Debounce localStorage writes for tab
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -152,6 +177,42 @@ function App() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [showProfileDropdown]);
+
+  // Timer countdown effect - runs at App level to persist across tab changes
+  useEffect(() => {
+    if (timerRunning && timerSeconds > 0) {
+      timerIntervalRef.current = setInterval(() => {
+        setTimerSeconds(prevSecs => prevSecs > 0 ? prevSecs - 1 : 0);
+      }, 1000);
+    } else {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+      }
+    }
+    return () => {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+      }
+    };
+  }, [timerRunning, timerSeconds]);
+
+  // Stopwatch interval effect - runs at App level to persist across tab changes
+  useEffect(() => {
+    if (stopwatchRunning) {
+      stopwatchIntervalRef.current = setInterval(() => {
+        setStopwatchTime(t => t + 10);
+      }, 10);
+    } else {
+      if (stopwatchIntervalRef.current) {
+        clearInterval(stopwatchIntervalRef.current);
+      }
+    }
+    return () => {
+      if (stopwatchIntervalRef.current) {
+        clearInterval(stopwatchIntervalRef.current);
+      }
+    };
+  }, [stopwatchRunning]);
 
   function handleAuthSuccess(loggedInUser) {
     setUser(loggedInUser);
@@ -356,7 +417,26 @@ function App() {
           isLoading={workoutsLoading}
         />
       )}
-      {currentTab === 2 && <RestTimerTab />}
+      {currentTab === 2 && (
+        <RestTimerTab
+          timerSubTab={timerSubTab}
+          setTimerSubTab={setTimerSubTab}
+          timerSeconds={timerSeconds}
+          setTimerSeconds={setTimerSeconds}
+          timerRunning={timerRunning}
+          setTimerRunning={setTimerRunning}
+          timerInputDigits={timerInputDigits}
+          setTimerInputDigits={setTimerInputDigits}
+          timerIntervalRef={timerIntervalRef}
+          stopwatchTime={stopwatchTime}
+          setStopwatchTime={setStopwatchTime}
+          stopwatchRunning={stopwatchRunning}
+          setStopwatchRunning={setStopwatchRunning}
+          stopwatchLaps={stopwatchLaps}
+          setStopwatchLaps={setStopwatchLaps}
+          stopwatchIntervalRef={stopwatchIntervalRef}
+        />
+      )}
 
       <footer>© 2025 upTrace</footer>
     </div>

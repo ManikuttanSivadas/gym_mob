@@ -3,8 +3,24 @@ import Stopwatch from './Stopwatch';
 import '../styles/RestTimer.css';
 
 // ---- REST TIMER COMPONENT WITH STOPWATCH ---- //
-function RestTimerTab() {
-  const [timerSubTab, setTimerSubTab] = useState(0); // 0 = Rest Timer, 1 = Stopwatch
+function RestTimerTab({
+  timerSubTab,
+  setTimerSubTab,
+  timerSeconds,
+  setTimerSeconds,
+  timerRunning,
+  setTimerRunning,
+  timerInputDigits,
+  setTimerInputDigits,
+  timerIntervalRef,
+  stopwatchTime,
+  setStopwatchTime,
+  stopwatchRunning,
+  setStopwatchRunning,
+  stopwatchLaps,
+  setStopwatchLaps,
+  stopwatchIntervalRef
+}) {
   const [touchStart, setTouchStart] = useState(0);
 
   const handleTouchStart = (e) => {
@@ -50,19 +66,34 @@ function RestTimerTab() {
       </div>
 
       {/* Timer Content */}
-      {timerSubTab === 0 && <RestTimer />}
-      {timerSubTab === 1 && <Stopwatch />}
+      {timerSubTab === 0 && (
+        <RestTimer
+          seconds={timerSeconds}
+          setSeconds={setTimerSeconds}
+          running={timerRunning}
+          setRunning={setTimerRunning}
+          inputDigits={timerInputDigits}
+          setInputDigits={setTimerInputDigits}
+          intervalRef={timerIntervalRef}
+        />
+      )}
+      {timerSubTab === 1 && (
+        <Stopwatch
+          time={stopwatchTime}
+          setTime={setStopwatchTime}
+          running={stopwatchRunning}
+          setRunning={setStopwatchRunning}
+          laps={stopwatchLaps}
+          setLaps={setStopwatchLaps}
+          intervalRef={stopwatchIntervalRef}
+        />
+      )}
     </div>
   );
 }
 
 // ---- REST TIMER COMPONENT ---- //
-function RestTimer() {
-  const [seconds, setSeconds] = useState(0);
-  const [running, setRunning] = useState(false);
-  const [inputDigits, setInputDigits] = useState('');
-  const intervalRef = useRef(null);
-
+function RestTimer({ seconds, setSeconds, running, setRunning, inputDigits, setInputDigits, intervalRef }) {
   // Format seconds to HH:MM:SS
   const formatTime = (totalSeconds) => {
     const hours = Math.floor(totalSeconds / 3600);
@@ -117,19 +148,7 @@ function RestTimer() {
     setSeconds(calculateSeconds(limited));
   };
 
-  // Countdown effect
-  useEffect(() => {
-    if (running && seconds > 0) {
-      intervalRef.current = setInterval(() => {
-        setSeconds(prevSecs => prevSecs > 0 ? prevSecs - 1 : 0);
-      }, 1000);
-    } else {
-      clearInterval(intervalRef.current);
-    }
-    return () => clearInterval(intervalRef.current);
-  }, [running, seconds]);
-
-  // Timer finished
+  // Timer finished notification
   useEffect(() => {
     if (seconds === 0 && running) {
       setRunning(false);
@@ -140,7 +159,7 @@ function RestTimer() {
         } catch (e) {}
       }
     }
-  }, [seconds, running]);
+  }, [seconds, running, setRunning]);
 
   const handleStartTimer = () => {
     if (seconds > 0) {
@@ -158,11 +177,64 @@ function RestTimer() {
     setInputDigits('');
   };
 
+  // Quick preset handlers
+  const handleQuickPick = (totalSeconds) => {
+    setSeconds(totalSeconds);
+    setRunning(false);
+    
+    // Convert seconds to inputDigits format (HHMMSS)
+    const hours = Math.floor(totalSeconds / 3600);
+    const mins = Math.floor((totalSeconds % 3600) / 60);
+    const secs = totalSeconds % 60;
+    
+    let digits = '';
+    if (hours > 0) {
+      digits = `${hours}${mins.toString().padStart(2, '0')}${secs.toString().padStart(2, '0')}`;
+    } else if (mins > 0) {
+      digits = `${mins}${secs.toString().padStart(2, '0')}`;
+    } else {
+      digits = secs.toString();
+    }
+    
+    setInputDigits(digits);
+  };
+
   // Display value
-  
 
   return (
     <div className="rest-timer-container">
+      {/* Quick Picks */}
+      <div className="rest-timer-quick-picks">
+        <button
+          className="rest-timer-quick-pick-btn"
+          onClick={() => handleQuickPick(30)}
+          disabled={running}
+        >
+          30s
+        </button>
+        <button
+          className="rest-timer-quick-pick-btn"
+          onClick={() => handleQuickPick(60)}
+          disabled={running}
+        >
+          1m
+        </button>
+        <button
+          className="rest-timer-quick-pick-btn"
+          onClick={() => handleQuickPick(120)}
+          disabled={running}
+        >
+          2m
+        </button>
+        <button
+          className="rest-timer-quick-pick-btn"
+          onClick={() => handleQuickPick(300)}
+          disabled={running}
+        >
+          5m
+        </button>
+      </div>
+
       {/* Single Input Box */}
       <div className="rest-timer-input-wrapper">
         <input

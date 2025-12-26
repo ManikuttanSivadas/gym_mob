@@ -1,22 +1,9 @@
 import React, { useState, useEffect, useRef, memo } from 'react';
 import '../styles/Stopwatch.css';
 
-export default memo(function Stopwatch() {
-  const [time, setTime] = useState(0);
-  const [running, setRunning] = useState(false);
-  const [laps, setLaps] = useState([]);
-  const intervalRef = useRef(null);
-
-  useEffect(() => {
-    if (running) {
-      intervalRef.current = setInterval(() => {
-        setTime(t => t + 10);
-      }, 10);
-    } else {
-      clearInterval(intervalRef.current);
-    }
-    return () => clearInterval(intervalRef.current);
-  }, [running]);
+export default memo(function Stopwatch({ time, setTime, running, setRunning, laps, setLaps, intervalRef }) {
+  // Interval is now managed at App level to persist across tab changes
+  // This component just uses the time state
 
   function startStopwatch() {
     setRunning(true);
