@@ -65,6 +65,13 @@ const CalendarView = memo(function CalendarView({
            calendarMonth.getMonth() === today.getMonth();
   }
 
+  function isToday(date) {
+    const today = new Date();
+    return date.getFullYear() === today.getFullYear() && 
+           date.getMonth() === today.getMonth() && 
+           date.getDate() === today.getDate();
+  }
+
   function renderCalendarGrid() {
     const daysInMonth = getDaysInMonth(calendarMonth);
     const firstDay = getFirstDayOfMonth(calendarMonth);
@@ -83,6 +90,7 @@ const CalendarView = memo(function CalendarView({
       const dateStr = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`;
       const hasWorkout = hasWorkoutOnDate(date);
       const isSelected = selectedDate === dateStr;
+      const isTodayDate = isToday(date);
 
       days.push(
         <button
@@ -102,10 +110,26 @@ const CalendarView = memo(function CalendarView({
             opacity: isSelected ? 1 : 0.9,
             outline: isSelected && hasWorkout ? "1.5px solid rgba(239, 68, 68, 0.6)" : "none",
             outlineOffset: isSelected && hasWorkout ? "2px" : "0px",
+            position: "relative",
+            boxShadow: isTodayDate ? (hasWorkout ? "0 0 0 2px white, 0 0 0 3.5px var(--text-accent)" : "0 0 0 2px var(--text-accent)") : "none",
           }}
           disabled={!hasWorkout}
         >
           {day}
+          {isTodayDate && (
+            <div
+              style={{
+                position: "absolute",
+                bottom: 4,
+                left: "50%",
+                transform: "translateX(-50%)",
+                width: 4,
+                height: 4,
+                borderRadius: "50%",
+                background: hasWorkout ? "white" : "var(--text-accent)",
+              }}
+            />
+          )}
         </button>
       );
     }

@@ -33,7 +33,7 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts, isLoading = false })
 
   const [showCalendarView, setShowCalendarView] = useState(() => {
     const saved = localStorage.getItem('viewWorkouts_showCalendarView');
-    return saved ? JSON.parse(saved) : false;
+    return saved ? JSON.parse(saved) : true;
   });
   const [calendarMonth, setCalendarMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
