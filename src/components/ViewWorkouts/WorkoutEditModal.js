@@ -152,18 +152,18 @@ function WorkoutEditModal({
                                 setEditingWorkoutData(updated);
                               }}
                               style={{ 
-                                padding: "6px 8px", 
-                                background: "rgba(239, 68, 68, 0.1)", 
-                                color: "var(--text-primary)", 
-                                border: "1px solid rgba(239, 68, 68, 0.3)", 
+                                padding: "4px 6px", 
+                                background: "transparent", 
+                                border: "none", 
                                 borderRadius: 4, 
                                 cursor: "pointer",
-                                fontSize: 11,
-                                fontWeight: 600,
-                                whiteSpace: "nowrap"
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center"
                               }}
+                              title="Delete set"
                             >
-                              Remove
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{color: "rgba(239, 68, 68, 0.8)"}}><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                             </button>
                           </div>
                         ))}
