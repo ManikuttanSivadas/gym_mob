@@ -160,16 +160,14 @@ function RestTimer({ seconds, setSeconds, running, setRunning, inputDigits, setI
     }
   }, [seconds, running, setRunning]);
 
-  // Update display when timer is running
+  // Update display when timer is running or when seconds change
   useEffect(() => {
-    if (running) {
-      const displayTime = formatTime(seconds);
-      const [h, m, s] = displayTime.split(':');
-      setHours(h);
-      setMinutes(m);
-      setSecs(s);
-    }
-  }, [seconds, running]);
+    const displayTime = formatTime(seconds);
+    const [h, m, s] = displayTime.split(':');
+    setHours(h);
+    setMinutes(m);
+    setSecs(s);
+  }, [seconds]);
 
   const handleStartTimer = () => {
     if (seconds > 0) {
