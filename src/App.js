@@ -6,6 +6,7 @@ import AuthPage from "./components/Auth/AuthPage";
 import ProfilePage from "./components/Auth/ProfilePage";
 import ThemeToggle from "./components/Common/ThemeToggle";
 import ProfileDropdown from "./components/Auth/ProfileDropdown";
+import TimerIndicatorBar from "./components/Common/TimerIndicatorBar";
 import AuthService from "./components/Auth/AuthService";
 import "./App.css";
 
@@ -427,6 +428,28 @@ function App() {
           stopwatchIntervalRef={stopwatchIntervalRef}
         />
       )}
+
+      <TimerIndicatorBar
+        timerRunning={timerRunning}
+        timerSeconds={timerSeconds}
+        stopwatchRunning={stopwatchRunning}
+        stopwatchTime={stopwatchTime}
+        onTimerToggle={() => setTimerRunning(!timerRunning)}
+        onStopwatchToggle={() => setStopwatchRunning(!stopwatchRunning)}
+        onTimerReset={() => {
+          setTimerRunning(false);
+          setTimerSeconds(0);
+          setTimerInputDigits('');
+        }}
+        onStopwatchReset={() => {
+          setStopwatchRunning(false);
+          setStopwatchTime(0);
+          setStopwatchLaps([]);
+        }}
+        onNavigateToTimer={() => setCurrentTab(2)}
+        timerSubTab={timerSubTab}
+        setTimerSubTab={setTimerSubTab}
+      />
 
       <footer>© 2025 upTrace</footer>
     </div>
