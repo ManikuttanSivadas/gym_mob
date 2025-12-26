@@ -278,7 +278,12 @@ export default memo(function ProfilePage({ user, onBack, onProfileSave }) {
       }
 
       setIsSaved(true);
-      setTimeout(() => setIsSaved(false), 2000);
+      // Navigate back to home after 1 second
+      setTimeout(() => {
+        if (onBack) {
+          onBack();
+        }
+      }, 1000);
     } catch (e) {
       // silently handle save errors
     }
