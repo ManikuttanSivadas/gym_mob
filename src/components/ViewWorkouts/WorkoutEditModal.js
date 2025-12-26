@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import DeleteModal from "./DeleteModal";
 
 function generateId() {
   return Date.now().toString() + Math.random().toString(36).slice(2, 9);
@@ -14,7 +15,42 @@ function WorkoutEditModal({
   onSave, 
   onCancel
 }) {
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [exerciseToDelete, setExerciseToDelete] = useState(null);
+
   if (!isOpen || !editingWorkoutData) return null;
+
+  const handleDeleteExercise = (exercise) => {
+    setExerciseToDelete(exercise);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDeleteExercise = () => {
+    if (!exerciseToDelete) return;
+
+    const remainingExercises = (editingWorkoutData?.exercises || []).filter(ex => ex.id !== exerciseToDelete.id);
+    
+    if (remainingExercises.length === 0) {
+      // Last exercise - remove entire workout
+      setShowDeleteModal(false);
+      setExerciseToDelete(null);
+      onCancel(); // Exit edit mode
+      return;
+    }
+    
+    const updated = {
+      ...editingWorkoutData,
+      exercises: remainingExercises
+    };
+    setEditingWorkoutData(updated);
+    setShowDeleteModal(false);
+    setExerciseToDelete(null);
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+    setExerciseToDelete(null);
+  };
 
   return (
     <div className="modal-overlay" onClick={onCancel}>
@@ -204,26 +240,7 @@ function WorkoutEditModal({
                     <div style={{ display: "flex", gap: 8 }}>
                       <button 
                         type="button"
-                        onClick={() => {
-                          const remainingExercises = (editingWorkoutData?.exercises || []).filter(ex => ex.id !== exercise.id);
-                          
-                          if (remainingExercises.length === 0) {
-                            const confirmed = window.confirm(
-                              "This is the last exercise in the workout. Deleting it will remove the entire workout. Continue?"
-                            );
-                            if (!confirmed) return;
-                            
-                            // This should trigger parent's onUpdateWorkouts
-                            onCancel(); // Exit edit mode
-                            return;
-                          }
-                          
-                          const updated = {
-                            ...editingWorkoutData,
-                            exercises: remainingExercises
-                          };
-                          setEditingWorkoutData(updated);
-                        }}
+                        onClick={() => handleDeleteExercise(exercise)}
                         style={{ 
                           flex: 1,
                           padding: "10px", 
@@ -290,6 +307,14 @@ function WorkoutEditModal({
           <button type="button" className="btn-success workout-edit-action-btn workout-edit-save-btn" onClick={onSave}>Done</button>
         </div>
       </div>
+
+      {/* Delete Exercise Confirmation Modal */}
+      <DeleteModal
+        showDeleteModal={showDeleteModal}
+        deleteTarget={exerciseToDelete ? { type: "exercise", exerciseName: exerciseToDelete.name } : null}
+        onConfirm={handleConfirmDeleteExercise}
+        onCancel={handleCancelDelete}
+      />
     </div>
   );
 }
