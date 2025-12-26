@@ -1436,6 +1436,8 @@ button {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: nowrap;
+  gap: 8px;
 }
 
 .exercise-actions {
@@ -2791,7 +2793,7 @@ footer {
   }
 
   .exercise-actions {
-    flex-direction: column;
+    flex-direction: row;
     gap: 4px;
   }
 

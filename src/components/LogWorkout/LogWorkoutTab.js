@@ -53,7 +53,85 @@ function SaveConfirmationModal({
   );
 }
 
-function SetInput({ onAddSet, sets, onRemoveSet }) {
+function SetEditModal({
+  isOpen,
+  set,
+  weight,
+  setWeight,
+  reps,
+  setReps,
+  onSave,
+  onCancel,
+}) {
+  if (!isOpen || !set) return null;
+
+  return (
+    <div className="modal-overlay" onClick={onCancel}>
+      <div className="modal-container" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h3>Edit Set</h3>
+        </div>
+        <div className="modal-content" style={{ padding: "20px" }}>
+          <div style={{ marginBottom: "16px" }}>
+            <label style={{ display: "block", marginBottom: "8px", fontSize: "14px", fontWeight: "600" }}>
+              Weight (kg)
+            </label>
+            <input
+              type="number"
+              value={weight}
+              onChange={(e) => setWeight(e.target.value)}
+              min={0}
+              step={0.5}
+              placeholder="Weight"
+              style={{
+                width: "100%",
+                padding: "10px",
+                borderRadius: "8px",
+                border: "1px solid var(--border-light)",
+                backgroundColor: "var(--bg-input)",
+                color: "var(--text-primary)",
+                fontSize: "14px",
+                boxSizing: "border-box",
+              }}
+            />
+          </div>
+          <div style={{ marginBottom: "16px" }}>
+            <label style={{ display: "block", marginBottom: "8px", fontSize: "14px", fontWeight: "600" }}>
+              Reps
+            </label>
+            <input
+              type="number"
+              value={reps}
+              onChange={(e) => setReps(e.target.value)}
+              min={1}
+              placeholder="Reps"
+              style={{
+                width: "100%",
+                padding: "10px",
+                borderRadius: "8px",
+                border: "1px solid var(--border-light)",
+                backgroundColor: "var(--bg-input)",
+                color: "var(--text-primary)",
+                fontSize: "14px",
+                boxSizing: "border-box",
+              }}
+            />
+          </div>
+        </div>
+        <div className="modal-actions">
+          <button className="btn-modal-secondary" onClick={onCancel}>
+            Cancel
+          </button>
+          <button className="btn-modal-primary" onClick={onSave}>
+            Save Set
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SetInput({ onAddSet, sets, onRemoveSet, onEditSet }) {
   const [weight, setWeight] = useState("");
   const [reps, setReps] = useState("");
   function handleSubmit() {
@@ -99,13 +177,43 @@ function SetInput({ onAddSet, sets, onRemoveSet }) {
               <span>
                 Set {idx + 1} • {set.weight} kg × {set.reps} reps
               </span>
-              <button
-                className="btn-danger"
-                type="button"
-                onClick={() => onRemoveSet(set.id)}
-              >
-                Remove
-              </button>
+              <div style={{ display: "flex", gap: "8px" }}>
+                {onEditSet && (
+                  <button
+                    type="button"
+                    onClick={() => onEditSet(set, "active")}
+                    style={{ 
+                      padding: "4px 6px", 
+                      border: "none",
+                      background: "transparent",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center"
+                    }}
+                    title="Edit set"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{color: "var(--text-accent)"}}><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => onRemoveSet(set.id)}
+                  style={{ 
+                    padding: "4px 6px", 
+                    fontSize: "16px",
+                    border: "none",
+                    background: "transparent",
+                    color: "var(--btn-danger)",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease"
+                  }}
+                  title="Delete set"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -136,6 +244,10 @@ function LogWorkoutTab({
   const [editingSets, setEditingSets] = useState([]);
   const [editingName, setEditingName] = useState("");
   const [showSaveModal, setShowSaveModal] = useState(false);
+  const [editingSet, setEditingSet] = useState(null);
+  const [editingSetWeight, setEditingSetWeight] = useState("");
+  const [editingSetReps, setEditingSetReps] = useState("");
+  const [editingSetExerciseId, setEditingSetExerciseId] = useState(null);
 
   const [selectedDate, setSelectedDate] = useState(() => {
     const today = new Date();
@@ -268,6 +380,69 @@ function LogWorkoutTab({
     } else {
       setCurrentSets(currentSets.filter((set) => set.id !== setId));
     }
+  }
+
+  function handleEditSet(set, exerciseId) {
+    setEditingSet(set);
+    setEditingSetWeight(set.weight.toString());
+    setEditingSetReps(set.reps.toString());
+    setEditingSetExerciseId(exerciseId);
+  }
+
+  function handleSaveEditSet() {
+    const weight = parseFloat(editingSetWeight);
+    const reps = parseInt(editingSetReps, 10);
+
+    if (!editingSetWeight || !editingSetReps || isNaN(weight) || isNaN(reps)) {
+      showError("Please enter valid weight and reps");
+      return;
+    }
+    if (weight <= 0 || reps <= 0) {
+      showError("Weight and reps must be positive numbers");
+      return;
+    }
+
+    // Update the set in the correct array
+    if (editingSetExerciseId === "active") {
+      // Currently adding sets
+      setCurrentSets(
+        currentSets.map((s) =>
+          s.id === editingSet.id ? { ...s, weight, reps } : s
+        )
+      );
+    } else if (editingSetExerciseId === "editing") {
+      // Editing an exercise
+      setEditingSets(
+        editingSets.map((s) =>
+          s.id === editingSet.id ? { ...s, weight, reps } : s
+        )
+      );
+    } else {
+      // Editing from saved exercises
+      const updatedExercises = workoutExercises.map((ex) =>
+        ex.id === editingSetExerciseId
+          ? {
+              ...ex,
+              sets: ex.sets.map((s) =>
+                s.id === editingSet.id ? { ...s, weight, reps } : s
+              ),
+            }
+          : ex
+      );
+      setWorkoutExercises(updatedExercises);
+    }
+
+    setEditingSet(null);
+    setEditingSetWeight("");
+    setEditingSetReps("");
+    setEditingSetExerciseId(null);
+  }
+
+  function handleCancelEditSet() {
+    setEditingSet(null);
+    setEditingSetWeight("");
+    setEditingSetReps("");
+    setEditingSetExerciseId(null);
   }
 
   function handleFinishExercise() {
@@ -569,6 +744,7 @@ function LogWorkoutTab({
                 onAddSet={handleAddSet}
                 sets={currentExerciseSets}
                 onRemoveSet={handleRemoveSet}
+                onEditSet={handleEditSet}
               />
               <div style={{ marginTop: "16px", display: "flex", gap: "8px" }}>
                 <button
@@ -600,27 +776,68 @@ function LogWorkoutTab({
                     {exercise.name}
                     <div className="exercise-actions">
                       <button
-                        className="btn-edit"
                         type="button"
                         onClick={() => handleEditExercise(exercise)}
                         disabled={!!currentExercise}
+                        style={{ 
+                          padding: "4px 6px", 
+                          background: "transparent",
+                          border: "none",
+                          cursor: "pointer",
+                          transition: "all 0.2s ease",
+                          opacity: !!currentExercise ? 0.5 : 1,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0
+                        }}
+                        title="Edit exercise"
                       >
-                        Edit
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{color: "var(--text-accent)"}}><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                       </button>
                       <button
-                        className="btn-danger"
                         type="button"
                         onClick={() => handleRemoveExercise(exercise.id)}
                         disabled={!!currentExercise}
+                        style={{ 
+                          padding: "4px 6px", 
+                          border: "none",
+                          background: "transparent",
+                          cursor: "pointer",
+                          transition: "all 0.2s ease",
+                          opacity: !!currentExercise ? 0.5 : 1,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0
+                        }}
+                        title="Delete exercise"
                       >
-                        Remove
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{color: "rgba(239, 68, 68, 0.8)"}}><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                       </button>
                     </div>
                   </h4>
                   <ul className="sets-list">
                     {exercise.sets.map((set, idx) => (
-                      <li key={set.id}>
-                        Set {idx + 1} • {set.weight} kg × {set.reps} reps
+                      <li
+                        key={set.id}
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          padding: "8px 12px",
+                          borderRadius: "6px",
+                          transition: "all 0.2s ease",
+                          backgroundColor: "transparent",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = "var(--bg-tertiary)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = "transparent";
+                        }}
+                      >
+                        <span>Set {idx + 1} • {set.weight} kg × {set.reps} reps</span>
                       </li>
                     ))}
                   </ul>
@@ -667,6 +884,17 @@ function LogWorkoutTab({
         selectedDate={formatSelectedDate(selectedDate)}
         onClose={() => setShowSaveModal(false)}
         onConfirm={handleConfirmSave}
+      />
+
+      <SetEditModal
+        isOpen={!!editingSet}
+        set={editingSet}
+        weight={editingSetWeight}
+        setWeight={setEditingSetWeight}
+        reps={editingSetReps}
+        setReps={setEditingSetReps}
+        onSave={handleSaveEditSet}
+        onCancel={handleCancelEditSet}
       />
 
       {/* Alert Modal */}
