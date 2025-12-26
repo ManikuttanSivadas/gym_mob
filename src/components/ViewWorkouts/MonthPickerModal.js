@@ -59,9 +59,9 @@ function MonthPickerModal({ value = [], onChange, min, max, onClose }) {
     <div className="modal-overlay" onClick={() => onClose && onClose()}>
       <div className="modal-container" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 360 }}>
         <div className="modal-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <button className="btn-secondary" onClick={() => canGoPrev && setYear(y => y - 1)} disabled={!canGoPrev} aria-label="Prev year" style={{ opacity: canGoPrev ? 1 : 0.5, cursor: canGoPrev ? "pointer" : "not-allowed" }}>‹</button>
+          <button className="btn-secondary" onClick={() => canGoPrev && setYear(y => y - 1)} disabled={!canGoPrev} aria-label="Prev year" style={{ opacity: canGoPrev ? 1 : 0.5, cursor: canGoPrev ? "pointer" : "not-allowed", fontSize: 20, lineHeight: 1, padding: "4px 8px", background: "transparent", border: "none" }}>‹</button>
           <strong>{year}</strong>
-          <button className="btn-secondary" onClick={() => canGoNext && setYear(y => y + 1)} disabled={!canGoNext} aria-label="Next year" style={{ opacity: canGoNext ? 1 : 0.5, cursor: canGoNext ? "pointer" : "not-allowed" }}>›</button>
+          <button className="btn-secondary" onClick={() => canGoNext && setYear(y => y + 1)} disabled={!canGoNext} aria-label="Next year" style={{ opacity: canGoNext ? 1 : 0.5, cursor: canGoNext ? "pointer" : "not-allowed", fontSize: 20, lineHeight: 1, padding: "4px 8px", background: "transparent", border: "none" }}>›</button>
         </div>
 
         <div style={{ padding: "12px 16px" }}>
