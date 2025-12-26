@@ -183,6 +183,49 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts, isLoading = false })
       alert("Add at least one exercise."); 
       return; 
     }
+    
+    // Validate all exercises have names and all sets have weight and reps
+    for (let i = 0; i < editingWorkoutData.exercises.length; i++) {
+      const exercise = editingWorkoutData.exercises[i];
+      
+      // Check exercise name
+      if (!exercise.name || exercise.name.trim() === "") {
+        alert("Empty record: Exercise name is mandatory.");
+        return;
+      }
+      
+      // Check if exercise has at least one set
+      if (!exercise.sets || exercise.sets.length === 0) {
+        alert(`Exercise "${exercise.name}": Please add at least one set.`);
+        return;
+      }
+      
+      // Check all sets have valid weight and reps
+      for (let j = 0; j < exercise.sets.length; j++) {
+        const set = exercise.sets[j];
+        
+        if (set.weight === "" || set.weight === null || set.weight === undefined || isNaN(Number(set.weight))) {
+          alert(`Exercise "${exercise.name}" - Set ${j + 1}: Weight is mandatory.`);
+          return;
+        }
+        
+        if (set.reps === "" || set.reps === null || set.reps === undefined || isNaN(Number(set.reps))) {
+          alert(`Exercise "${exercise.name}" - Set ${j + 1}: Reps is mandatory.`);
+          return;
+        }
+        
+        if (Number(set.weight) < 0 || Number(set.reps) < 0) {
+          alert(`Exercise "${exercise.name}" - Set ${j + 1}: Weight and reps must be positive.`);
+          return;
+        }
+        
+        if (Number(set.reps) === 0) {
+          alert(`Exercise "${exercise.name}" - Set ${j + 1}: Reps must be at least 1.`);
+          return;
+        }
+      }
+    }
+    
     // Save the edited workout data with updated name
     const updated = workouts.map(w => w.id === editingWorkout ? { ...editingWorkoutData, name: editWorkoutName.trim() } : w);
     onUpdateWorkouts && onUpdateWorkouts(updated);
