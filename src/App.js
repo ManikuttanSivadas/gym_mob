@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import LogWorkoutTab from "./components/LogWorkout/LogWorkoutTab";
 import ViewWorkoutsTab from "./components/ViewWorkouts/ViewWorkoutsTab";
 import RestTimerTab from "./components/Timer/RestTimerTab";
@@ -41,6 +42,10 @@ function App() {
   const [stopwatchLaps, setStopwatchLaps] = useState([]);
   const stopwatchIntervalRef = useRef(null);
 
+  // Timer ended modal state - at App level so visible across all tabs
+  const [showTimerEndedModal, setShowTimerEndedModal] = useState(false);
+  const vibrationIntervalRef = useRef(null);
+
   // Timer sub-tab state (0 = Rest Timer, 1 = Stopwatch) - persists across main tab changes
   const [timerSubTab, setTimerSubTab] = useState(() => {
     const savedSubTab = localStorage.getItem("timerSubTab");
@@ -51,6 +56,24 @@ function App() {
     const src = (u && (u.name || u.username || u.displayName || u.email)) || "";
     return (src && String(src)[0].toUpperCase()) || "?";
   }
+
+  // Handle timer ended OK button
+  const handleTimerEndedOK = () => {
+    setShowTimerEndedModal(false);
+    if (vibrationIntervalRef.current) {
+      clearInterval(vibrationIntervalRef.current);
+      vibrationIntervalRef.current = null;
+    }
+  };
+
+  // Cleanup vibration on unmount
+  useEffect(() => {
+    return () => {
+      if (vibrationIntervalRef.current) {
+        clearInterval(vibrationIntervalRef.current);
+      }
+    };
+  }, []);
 
   const profileBtnRef = useRef(null);
   const profileDropdownRef = useRef(null);
@@ -184,7 +207,31 @@ function App() {
         clearInterval(timerIntervalRef.current);
       }
     };
-  }, [timerRunning, timerSeconds]);
+  }, [timerRunning]);
+
+  // Timer finished effect - at App level so it works even when not on Timer tab
+  useEffect(() => {
+    if (timerSeconds === 0 && timerRunning) {
+      console.log('Timer ended at App level! Setting modal to true');
+      setTimerRunning(false);
+      setShowTimerEndedModal(true);
+      
+      // Play audio notification
+      if (typeof Audio !== 'undefined') {
+        try {
+          const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAAB9AAACABAAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBg==');
+          audio.play().catch(() => {});
+        } catch (e) {}
+      }
+      
+      // Start continuous vibration
+      if (navigator.vibrate) {
+        vibrationIntervalRef.current = setInterval(() => {
+          navigator.vibrate([200, 100, 200, 100, 200]);
+        }, 700);
+      }
+    }
+  }, [timerSeconds, timerRunning, setTimerRunning]);
 
   // Stopwatch interval effect
   useEffect(() => {
@@ -425,7 +472,59 @@ function App() {
           stopwatchLaps={stopwatchLaps}
           setStopwatchLaps={setStopwatchLaps}
           stopwatchIntervalRef={stopwatchIntervalRef}
+          showTimerEndedModal={showTimerEndedModal}
+          setShowTimerEndedModal={setShowTimerEndedModal}
+          vibrationIntervalRef={vibrationIntervalRef}
         />
+      )}
+
+      {/* Timer Ended Modal - Rendered at App level to be visible across all tabs */}
+      {showTimerEndedModal && createPortal(
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999
+        }}>
+          <div style={{
+            backgroundColor: 'var(--bg-secondary)',
+            padding: '32px',
+            borderRadius: '16px',
+            textAlign: 'center',
+            maxWidth: '300px',
+            boxShadow: 'var(--shadow-lg)'
+          }}>
+            <h2 style={{ color: 'var(--text-primary)', marginBottom: '16px' }}>
+              ⏱️ Timer Ended
+            </h2>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '24px', fontSize: '16px' }}>
+              Time to get back to training!
+            </p>
+            <button
+              onClick={handleTimerEndedOK}
+              style={{
+                backgroundColor: 'var(--btn-success)',
+                color: 'white',
+                border: 'none',
+                padding: '12px 32px',
+                borderRadius: '8px',
+                fontSize: '16px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                width: '100%'
+              }}
+            >
+              OK
+            </button>
+          </div>
+        </div>,
+        document.body
       )}
 
       <footer>© 2025 upTrace</footer>

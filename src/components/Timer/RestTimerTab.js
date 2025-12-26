@@ -18,7 +18,10 @@ function RestTimerTab({
   setStopwatchRunning,
   stopwatchLaps,
   setStopwatchLaps,
-  stopwatchIntervalRef
+  stopwatchIntervalRef,
+  showTimerEndedModal,
+  setShowTimerEndedModal,
+  vibrationIntervalRef
 }) {
   return (
     <div className="tab-section">
@@ -48,6 +51,9 @@ function RestTimerTab({
           inputDigits={timerInputDigits}
           setInputDigits={setTimerInputDigits}
           intervalRef={timerIntervalRef}
+          showTimerEndedModal={showTimerEndedModal}
+          setShowTimerEndedModal={setShowTimerEndedModal}
+          vibrationIntervalRef={vibrationIntervalRef}
         />
       )}
       {timerSubTab === 1 && (
@@ -65,7 +71,7 @@ function RestTimerTab({
   );
 }
 
-function RestTimer({ seconds, setSeconds, running, setRunning, inputDigits, setInputDigits, intervalRef }) {
+function RestTimer({ seconds, setSeconds, running, setRunning, inputDigits, setInputDigits, intervalRef, showTimerEndedModal, setShowTimerEndedModal, vibrationIntervalRef }) {
   const [hours, setHours] = useState('00');
   const [minutes, setMinutes] = useState('00');
   const [secs, setSecs] = useState('00');
@@ -115,10 +121,8 @@ function RestTimer({ seconds, setSeconds, running, setRunning, inputDigits, setI
   useEffect(() => {
     if (seconds === 0 && running) {
       setRunning(false);
-      // Vibrate the phone
-      if (navigator.vibrate) {
-        navigator.vibrate([200, 100, 200, 100, 200]); // Pattern: 200ms vibrate, 100ms pause, repeat
-      }
+      setShowTimerEndedModal(true);
+      
       // Play audio notification
       if (typeof Audio !== 'undefined') {
         try {
@@ -126,8 +130,27 @@ function RestTimer({ seconds, setSeconds, running, setRunning, inputDigits, setI
           audio.play().catch(() => {});
         } catch (e) {}
       }
+      
+      // Start continuous vibration
+      if (navigator.vibrate) {
+        vibrationIntervalRef.current = setInterval(() => {
+          navigator.vibrate([200, 100, 200, 100, 200]);
+        }, 700);
+      }
     }
-  }, [seconds, running, setRunning]);
+  }, [seconds, running, setRunning, setShowTimerEndedModal, vibrationIntervalRef]);
+
+  // Handle OK button click - stops vibration and closes modal
+  const handleTimerEndedOK = () => {
+    setShowTimerEndedModal(false);
+    // Stop vibration
+    if (vibrationIntervalRef.current) {
+      clearInterval(vibrationIntervalRef.current);
+      vibrationIntervalRef.current = null;
+    }
+  };
+
+  // Cleanup vibration on unmount
 
   // Update display only when timer is running (countdown display)
   useEffect(() => {
