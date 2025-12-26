@@ -251,6 +251,7 @@ function LogWorkoutTab({
   const [editingSetExerciseId, setEditingSetExerciseId] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [exerciseToDelete, setExerciseToDelete] = useState(null);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   const [selectedDate, setSelectedDate] = useState(() => {
     const savedDate = localStorage.getItem("logWorkoutSelectedDate");
@@ -485,6 +486,11 @@ function LogWorkoutTab({
   }
 
   function handleCancelExercise() {
+    setShowCancelConfirm(true);
+  }
+
+  function handleConfirmCancel() {
+    setShowCancelConfirm(false);
     if (editingExercise) {
       setEditingExercise(null);
       setEditingSets([]);
@@ -493,6 +499,10 @@ function LogWorkoutTab({
       setActiveExercise(null);
       setCurrentSets([]);
     }
+  }
+
+  function handleCancelConfirmCancel() {
+    setShowCancelConfirm(false);
   }
   function handleRemoveExercise(exerciseId) {
     const exercise = workoutExercises.find(ex => ex.id === exerciseId);
@@ -932,6 +942,26 @@ function LogWorkoutTab({
         onConfirm={handleConfirmDeleteExercise}
         onCancel={handleCancelDeleteExercise}
       />
+
+      {/* Cancel Exercise Confirmation Modal */}
+      {showCancelConfirm && (
+        <div className="modal-overlay" onClick={handleCancelConfirmCancel}>
+          <div className="modal-container" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Discard Changes?</h3>
+              <p>Are you sure you want to cancel? All changes to this exercise will be lost.</p>
+            </div>
+            <div className="modal-actions">
+              <button className="btn-modal-secondary" onClick={handleCancelConfirmCancel}>
+                No
+              </button>
+              <button className="btn-modal-primary" onClick={handleConfirmCancel}>
+                Yes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Alert Modal */}
       {alert && (
