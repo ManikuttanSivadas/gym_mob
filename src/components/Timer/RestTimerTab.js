@@ -84,10 +84,6 @@ function RestTimer({ seconds, setSeconds, running, setRunning, inputDigits, setI
     updateSeconds(value, minutes, secs);
   };
 
-  const handleHoursFocus = () => {
-    setHours('');
-  };
-
   // Handle 2-digit input for minutes
   const handleMinutesChange = (e) => {
     let value = e.target.value.replace(/\D/g, '').slice(0, 2);
@@ -97,10 +93,6 @@ function RestTimer({ seconds, setSeconds, running, setRunning, inputDigits, setI
     updateSeconds(hours, value, secs);
   };
 
-  const handleMinutesFocus = () => {
-    setMinutes('');
-  };
-
   // Handle 2-digit input for seconds
   const handleSecondsChange = (e) => {
     let value = e.target.value.replace(/\D/g, '').slice(0, 2);
@@ -108,10 +100,6 @@ function RestTimer({ seconds, setSeconds, running, setRunning, inputDigits, setI
     if (parseInt(value) > 59) value = '59';
     setSecs(value);
     updateSeconds(hours, minutes, value);
-  };
-
-  const handleSecondsFocus = () => {
-    setSecs('');
   };
 
   // Update total seconds from h:m:s values
@@ -141,14 +129,16 @@ function RestTimer({ seconds, setSeconds, running, setRunning, inputDigits, setI
     }
   }, [seconds, running, setRunning]);
 
-  // Update display when timer is running or when seconds change
+  // Update display only when timer is running (countdown display)
   useEffect(() => {
-    const displayTime = formatTime(seconds);
-    const [h, m, s] = displayTime.split(':');
-    setHours(h);
-    setMinutes(m);
-    setSecs(s);
-  }, [seconds]);
+    if (running) {
+      const displayTime = formatTime(seconds);
+      const [h, m, s] = displayTime.split(':');
+      setHours(h);
+      setMinutes(m);
+      setSecs(s);
+    }
+  }, [seconds, running]);
 
   const handleStartTimer = () => {
     if (seconds > 0) {
@@ -226,10 +216,11 @@ function RestTimer({ seconds, setSeconds, running, setRunning, inputDigits, setI
             className="rest-timer-input-box"
             value={hours}
             onChange={handleHoursChange}
-            onFocus={handleHoursFocus}
+            onFocus={(e) => { setHours(''); e.target.value = ''; }}
             disabled={running}
             maxLength="2"
             inputMode="numeric"
+            placeholder="00"
           />
         </div>
         
@@ -242,10 +233,11 @@ function RestTimer({ seconds, setSeconds, running, setRunning, inputDigits, setI
             className="rest-timer-input-box"
             value={minutes}
             onChange={handleMinutesChange}
-            onFocus={handleMinutesFocus}
+            onFocus={(e) => { setMinutes(''); e.target.value = ''; }}
             disabled={running}
             maxLength="2"
             inputMode="numeric"
+            placeholder="00"
           />
         </div>
         
@@ -258,10 +250,11 @@ function RestTimer({ seconds, setSeconds, running, setRunning, inputDigits, setI
             className="rest-timer-input-box"
             value={secs}
             onChange={handleSecondsChange}
-            onFocus={handleSecondsFocus}
+            onFocus={(e) => { setSecs(''); e.target.value = ''; }}
             disabled={running}
             maxLength="2"
             inputMode="numeric"
+            placeholder="00"
           />
         </div>
       </div>
