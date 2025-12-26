@@ -115,14 +115,6 @@
   transition: all 0.2s ease;
 }
 
-.rest-timer-quick-pick-btn:hover:not(:disabled) {
-  background: var(--btn-primary);
-  color: white;
-  border-color: var(--btn-primary);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-
 .rest-timer-quick-pick-btn:active:not(:disabled) {
   transform: translateY(0);
 }
@@ -259,27 +251,34 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: 50%;
 }
 
 .rest-timer-button:active:not(:disabled) {
   transform: translateY(-2px);
 }
 
+.rest-timer-button:focus,
+.rest-timer-button:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
 .rest-timer-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  pointer-events: none;
+  background: var(--bg-tertiary) !important;
+  color: var(--text-muted) !important;
+  transform: none !important;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
-/* Start Button - Primary Blue */
+/* Start Button - Green */
 .start-button {
-  background: var(--btn-primary);
+  background: #10b981;
   color: white;
-}
-
-.start-button:hover:not(:disabled) {
-  background: var(--btn-primary-hover);
-  transform: translateY(-1px);
 }
 
 /* Pause Button - Danger Red */
@@ -288,20 +287,10 @@
   color: white;
 }
 
-.pause-button:hover:not(:disabled) {
-  background: var(--btn-danger-hover);
-  transform: translateY(-1px);
-}
-
 /* Reset Button - Secondary */
 .reset-button {
   background: var(--btn-primary);
   color: white;
-}
-
-.reset-button:hover:not(:disabled) {
-  background: var(--btn-primary-hover);
-  transform: translateY(-1px);
 }
 
 /* Dark Mode Support */

@@ -182,6 +182,7 @@ function RestTimer({ seconds, setSeconds, running, setRunning, inputDigits, setI
   };
 
   const handleResetTimer = () => {
+    if (seconds === 0) return; // Prevent reset when timer is at 0
     setSeconds(0);
     setRunning(false);
     setHours('00');
