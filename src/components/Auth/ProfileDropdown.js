@@ -31,35 +31,30 @@ export default function ProfileDropdown({ user, onLogout, onClose, isOpen, onPro
     <>
       <div className="profile-dropdown-overlay" onClick={onClose} />
       <div className="profile-dropdown">
-        {/* Profile Info */}
-        <div className="profile-dropdown-header">
-          <div className="profile-dropdown-avatar">
-            {user && user.photo ? (
-              <img src={user.photo} alt="Profile" className="profile-dropdown-avatar-image" />
-            ) : (
-              initial
-            )}
+        {/* Profile Info - Clickable */}
+        <button
+          type="button"
+          className="profile-dropdown-header-btn"
+          onClick={() => {
+            onProfileClick && onProfileClick();
+            onClose && onClose();
+          }}
+        >
+          <div className="profile-dropdown-header">
+            <div className="profile-dropdown-avatar">
+              {user && user.photo ? (
+                <img src={user.photo} alt="Profile" className="profile-dropdown-avatar-image" />
+              ) : (
+                initial
+              )}
+            </div>
+            <div className="profile-dropdown-info">
+              <div className="profile-dropdown-name">{displayName}</div>
+              <div className="profile-dropdown-email">{email}</div>
+            </div>
           </div>
-          <div className="profile-dropdown-info">
-            <div className="profile-dropdown-name">{displayName}</div>
-            <div className="profile-dropdown-email">{email}</div>
-          </div>
-        </div>
+        </button>
 
-        <div className="profile-dropdown-divider" />
-        {/* Profile Tab */}
-        <div className="profile-dropdown-profile-tab">
-          <button
-            type="button"
-            className="profile-dropdown-item"
-            onClick={() => {
-              onProfileClick && onProfileClick();
-              onClose && onClose();
-            }}
-          >
-            Profile
-          </button>
-        </div>
         <div className="profile-dropdown-divider" />
         {/* Collapsible Know Us Tab */}
         <div className="profile-dropdown-know-us-tab">
