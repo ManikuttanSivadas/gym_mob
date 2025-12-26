@@ -127,6 +127,11 @@ function RestTimer({ seconds, setSeconds, running, setRunning, inputDigits, setI
   useEffect(() => {
     if (seconds === 0 && running) {
       setRunning(false);
+      // Vibrate the phone
+      if (navigator.vibrate) {
+        navigator.vibrate([200, 100, 200, 100, 200]); // Pattern: 200ms vibrate, 100ms pause, repeat
+      }
+      // Play audio notification
       if (typeof Audio !== 'undefined') {
         try {
           const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAAB9AAACABAAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBg==');
