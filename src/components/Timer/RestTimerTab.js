@@ -295,14 +295,13 @@ function RestTimer({ seconds, setSeconds, running, setRunning, inputDigits, setI
         >
           {running ? 'Pause' : 'Start'}
         </button>
-        {seconds > 0 && (
-          <button
-            className="rest-timer-button reset-button"
-            onClick={handleResetTimer}
-          >
-            Reset
-          </button>
-        )}
+        <button
+          className="rest-timer-button reset-button"
+          onClick={handleResetTimer}
+          disabled={seconds === 0}
+        >
+          Reset
+        </button>
       </div>
     </div>
   );

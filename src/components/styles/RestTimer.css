@@ -250,22 +250,20 @@
 }
 
 .rest-timer-button {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
+  padding: 12px 24px;
   border: none;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: var(--shadow-md);
+  border-radius: 8px;
 }
 
 .rest-timer-button:active:not(:disabled) {
-  transform: scale(0.95);
+  transform: translateY(-2px);
 }
 
 .rest-timer-button:disabled {
@@ -273,18 +271,18 @@
   cursor: not-allowed;
 }
 
-/* Start Button - Green */
+/* Start Button - Primary Blue */
 .start-button {
-  background: var(--btn-success);
+  background: var(--btn-primary);
   color: white;
 }
 
 .start-button:hover:not(:disabled) {
-  background: var(--btn-success-hover);
-  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.4);
+  background: var(--btn-primary-hover);
+  transform: translateY(-1px);
 }
 
-/* Pause Button - Red */
+/* Pause Button - Danger Red */
 .pause-button {
   background: var(--btn-danger);
   color: white;
@@ -292,18 +290,18 @@
 
 .pause-button:hover:not(:disabled) {
   background: var(--btn-danger-hover);
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+  transform: translateY(-1px);
 }
 
-/* Reset Button - Red */
+/* Reset Button - Secondary */
 .reset-button {
-  background: var(--btn-danger);
+  background: var(--btn-primary);
   color: white;
 }
 
 .reset-button:hover:not(:disabled) {
-  background: var(--btn-danger-hover);
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+  background: var(--btn-primary-hover);
+  transform: translateY(-1px);
 }
 
 /* Dark Mode Support */
