@@ -82,7 +82,7 @@ export default memo(function ProfilePage({ user, onBack, onProfileSave }) {
             return;
           }
         } catch (e) {
-          console.error("Error loading profile from Firestore:", e);
+          // silently handle Firestore load errors
         }
       }
 
@@ -100,7 +100,7 @@ export default memo(function ProfilePage({ user, onBack, onProfileSave }) {
           setOriginalData(parsed);
         }
       } catch (e) {
-        console.error("Error loading profile from localStorage:", e);
+        // silently handle localStorage parse errors
       }
     };
 
@@ -181,7 +181,7 @@ export default memo(function ProfilePage({ user, onBack, onProfileSave }) {
           
           if (user.email) {
             AuthService.saveUserProfile(user.uid, user.email, profileData).catch((err) => {
-              console.error("Error saving profile to Firestore:", err);
+              // silently handle Firestore save errors
             });
           }
 
@@ -200,7 +200,7 @@ export default memo(function ProfilePage({ user, onBack, onProfileSave }) {
       };
       reader.readAsDataURL(file);
     } catch (err) {
-      console.error("Error uploading photo:", err);
+      // silently handle photo upload errors
     } finally {
       setIsUploading(false);
     }
@@ -246,7 +246,7 @@ export default memo(function ProfilePage({ user, onBack, onProfileSave }) {
         
         // Save to Firestore only if data changed
         AuthService.saveUserProfile(user.uid, user.email, profileData).catch((err) => {
-          console.error("Error saving profile to Firestore:", err);
+          // silently handle Firestore save errors
         });
         
         // Update original data after saving
@@ -274,7 +274,7 @@ export default memo(function ProfilePage({ user, onBack, onProfileSave }) {
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 2000);
     } catch (e) {
-      console.error("Error saving profile:", e);
+      // silently handle save errors
     }
   };
 

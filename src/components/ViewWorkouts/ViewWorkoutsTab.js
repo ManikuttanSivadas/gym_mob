@@ -9,7 +9,6 @@ import WorkoutEditModal from "./WorkoutEditModal";
 import AlertModal from "../Common/AlertModal";
 import { useAlert } from "../../hooks/useAlert";
 
-// Helper: generate simple unique id for new sets
 function generateId() {
   return Date.now().toString() + Math.random().toString(36).slice(2, 9);
 }
@@ -19,7 +18,6 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts, isLoading = false })
   const [deleteTarget, setDeleteTarget] = useState(null);
   const { alert, showError, hideAlert } = useAlert();
 
-  // month filter state (array of "YYYY-MM")
   const [filterMonths, setFilterMonths] = useState([]);
   const [showMonthPicker, setShowMonthPicker] = useState(false);
 
@@ -33,7 +31,6 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts, isLoading = false })
   const [editWorkoutName, setEditWorkoutName] = useState("");
   const [editingWorkoutData, setEditingWorkoutData] = useState(null);
 
-  // calendar view state with localStorage persistence
   const [showCalendarView, setShowCalendarView] = useState(() => {
     const saved = localStorage.getItem('viewWorkouts_showCalendarView');
     return saved ? JSON.parse(saved) : false;
@@ -42,7 +39,6 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts, isLoading = false })
   const [selectedDate, setSelectedDate] = useState(null);
   const [expandedCalendarWorkouts, setExpandedCalendarWorkouts] = useState([]);
 
-  // persist showCalendarView to localStorage
   useEffect(() => {
     localStorage.setItem('viewWorkouts_showCalendarView', JSON.stringify(showCalendarView));
   }, [showCalendarView]);
@@ -88,7 +84,6 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts, isLoading = false })
     return oldest || getTodayMonth();
   }
 
-  // filter logic (multiple months) - memoized to prevent re-filtering on every render
   const filteredWorkouts = useMemo(() => {
     return (filterMonths && filterMonths.length > 0)
       ? workouts.filter(w => {

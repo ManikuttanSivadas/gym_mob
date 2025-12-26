@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useRef, memo } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import Stopwatch from './Stopwatch';
 import '../styles/RestTimer.css';
 
-// ---- REST TIMER COMPONENT WITH STOPWATCH ---- //
 function RestTimerTab({
   timerSubTab,
   setTimerSubTab,
@@ -49,7 +48,6 @@ function RestTimerTab({
     >
       <h2>Timer Tools</h2>
       
-      {/* Timer Sub-Navigation */}
       <div className="timer-sub-nav">
         <button 
           className={timerSubTab === 0 ? "timer-sub-btn active" : "timer-sub-btn"} 
@@ -65,7 +63,6 @@ function RestTimerTab({
         </button>
       </div>
 
-      {/* Timer Content */}
       {timerSubTab === 0 && (
         <RestTimer
           seconds={timerSeconds}
@@ -92,9 +89,7 @@ function RestTimerTab({
   );
 }
 
-// ---- REST TIMER COMPONENT ---- //
 function RestTimer({ seconds, setSeconds, running, setRunning, inputDigits, setInputDigits, intervalRef }) {
-  // Format seconds to HH:MM:SS
   const formatTime = (totalSeconds) => {
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);

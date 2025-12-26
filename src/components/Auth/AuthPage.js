@@ -42,23 +42,18 @@ function AuthPage({ onAuthSuccess, theme, onToggleTheme }) {
         result = await AuthService.signup(formData.username, formData.password, formData.email);
       }
 
-      console.log("Auth result:", result); // debug log
-
       if (result && result.success) {
         setMessage(isLogin ? "Login successful!" : "Account created!");
         setIsError(false);
         // call onAuthSuccess immediately (no timeout)
         if (typeof onAuthSuccess === "function") {
           onAuthSuccess(result.user);
-        } else {
-          console.warn("onAuthSuccess not provided to AuthPage");
         }
       } else {
         setMessage(result?.error || "Authentication failed");
         setIsError(true);
       }
     } catch (err) {
-      console.error("AuthPage.handleSubmit error:", err);
       setMessage("Unexpected error");
       setIsError(true);
     } finally {

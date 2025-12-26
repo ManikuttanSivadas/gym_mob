@@ -33,7 +33,6 @@ function ForgotPasswordPage({ onBack, theme, onToggleTheme }) {
         setIsError(true);
       }
     } catch (err) {
-      console.error("ForgotPasswordPage error:", err);
       setMessage("Error sending reset email");
       setIsError(true);
     } finally {

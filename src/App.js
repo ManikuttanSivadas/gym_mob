@@ -47,13 +47,11 @@ function App() {
     return savedSubTab ? parseInt(savedSubTab, 10) : 0;
   });
 
-  // helper — safe avatar initial
   function getAvatarInitial(u) {
     const src = (u && (u.name || u.username || u.displayName || u.email)) || "";
     return (src && String(src)[0].toUpperCase()) || "?";
   }
 
-  // --- REFS for outside click ---
   const profileBtnRef = useRef(null);
   const profileDropdownRef = useRef(null);
 
@@ -100,7 +98,6 @@ function App() {
     setIsLoading(false);
   }, []);
 
-  // subscribe to remote workouts when user is present
   useEffect(() => {
     if (!user) return;
     const uid = user.uid;
@@ -116,25 +113,21 @@ function App() {
     };
   }, [user]);
 
-  // persist current workout state when user changes or workout data changes
-  // Using a debounce effect to prevent excessive Firestore writes
   useEffect(() => {
     const uid = user?.uid;
     const email = user?.email;
     if (!uid || !email || typeof AuthService.saveCurrentWorkoutState !== "function") return;
     
-    // Debounce saves with a 500ms delay
     const timer = setTimeout(() => {
       const workoutState = { workoutName, workoutExercises, activeExercise, currentSets };
-      AuthService.saveCurrentWorkoutState(uid, email, workoutState).catch(err => 
-        console.error("Error saving workout state:", err)
-      );
+      AuthService.saveCurrentWorkoutState(uid, email, workoutState).catch(err => {
+        // silently handle save errors
+      });
     }, 500);
     
     return () => clearTimeout(timer);
   }, [workoutName, workoutExercises, activeExercise, currentSets, user]);
 
-  // Debounce localStorage writes for theme
   useEffect(() => {
     const timer = setTimeout(() => {
       localStorage.setItem("appTheme", theme);
@@ -143,7 +136,6 @@ function App() {
     return () => clearTimeout(timer);
   }, [theme]);
 
-  // Persist timer sub-tab selection to localStorage
   useEffect(() => {
     const timer = setTimeout(() => {
       localStorage.setItem("timerSubTab", timerSubTab.toString());
@@ -151,7 +143,6 @@ function App() {
     return () => clearTimeout(timer);
   }, [timerSubTab]);
 
-  // Debounce localStorage writes for tab
   useEffect(() => {
     const timer = setTimeout(() => {
       localStorage.setItem("currentTab", currentTab.toString());
@@ -159,7 +150,6 @@ function App() {
     return () => clearTimeout(timer);
   }, [currentTab]);
 
-  // --- Click outside to close profile dropdown ---
   useEffect(() => {
     if (!showProfileDropdown) return;
     function handleClickOutside(event) {
@@ -178,9 +168,9 @@ function App() {
     };
   }, [showProfileDropdown]);
 
-  // Timer countdown effect - runs at App level to persist across tab changes
+  // Timer countdown effect
   useEffect(() => {
-    if (timerRunning && timerSeconds > 0) {
+    if (timerRunning) {
       timerIntervalRef.current = setInterval(() => {
         setTimerSeconds(prevSecs => prevSecs > 0 ? prevSecs - 1 : 0);
       }, 1000);
@@ -196,7 +186,7 @@ function App() {
     };
   }, [timerRunning, timerSeconds]);
 
-  // Stopwatch interval effect - runs at App level to persist across tab changes
+  // Stopwatch interval effect
   useEffect(() => {
     if (stopwatchRunning) {
       stopwatchIntervalRef.current = setInterval(() => {
@@ -231,7 +221,7 @@ function App() {
           }
         })
         .catch((error) => {
-          console.error("Error loading profile on login:", error);
+          // silently handle profile load errors on auth success
         });
     }
 
@@ -253,7 +243,7 @@ function App() {
     }
   }
 
-  // toggle theme (was referenced but not defined)
+  // toggle theme
   const handleToggleTheme = useCallback(() => {
     setTheme(prev => (prev === "light" ? "dark" : "light"));
   }, []);

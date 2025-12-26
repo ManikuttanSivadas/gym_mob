@@ -326,8 +326,7 @@ const AuthService = {
         cb(remote);
       },
       (err) => {
-        // optional: surface error to console
-        console.error("subscribeToWorkouts error:", err);
+        // subscription error handling
       }
     );
     return unsub;
@@ -360,7 +359,7 @@ const AuthService = {
       const photoUrl = await getDownloadURL(storageRef);
       return photoUrl;
     } catch (e) {
-      console.error("Error uploading profile photo:", e);
+      // silently handle upload errors
       return null;
     }
   },
@@ -408,7 +407,7 @@ const AuthService = {
       const storageRef = ref(storage, `profile_photos/${uid}`);
       await deleteObject(storageRef);
     } catch (e) {
-      console.error("Error deleting profile photo:", e);
+      // silently handle deletion errors
     }
   },
 };
