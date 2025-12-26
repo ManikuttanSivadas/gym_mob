@@ -57,6 +57,9 @@ const CalendarView = memo(function CalendarView({
 
   function goToToday() {
     setCalendarMonth(new Date());
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}-${String(today.getDate()).padStart(2,"0")}`;
+    setSelectedDate(todayStr);
   }
 
   function isCurrentMonth() {
@@ -219,8 +222,13 @@ const CalendarView = memo(function CalendarView({
       {selectedDate && (
         <div style={{ marginTop: 16 }}>
           <h3 style={{ margin: "0 0 12px 0", color: "var(--text-primary)", fontSize: 16, fontWeight: 600 }}>Workouts on {new Date(selectedDate).toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}</h3>
-          <ul className="workout-list" style={{ padding: 0, margin: 0, listStyle: "none" }}>
-            {getWorkoutsForDate(new Date(selectedDate)).map(workout => {
+          {getWorkoutsForDate(new Date(selectedDate)).length === 0 ? (
+            <div style={{ padding: 16, background: "rgba(0,0,0,0.02)", borderRadius: 8, textAlign: "center", color: "var(--text-muted)", fontSize: 14 }}>
+              No workouts recorded for this date
+            </div>
+          ) : (
+            <ul className="workout-list" style={{ padding: 0, margin: 0, listStyle: "none" }}>
+              {getWorkoutsForDate(new Date(selectedDate)).map(workout => {
               const isExpanded = expandedCalendarWorkouts.includes(workout.id);
               return (
                 <li key={workout.id} className="workout-item" style={{ marginBottom: 12 }}>
@@ -319,6 +327,7 @@ const CalendarView = memo(function CalendarView({
               );
             })}
           </ul>
+          )}
         </div>
       )}
     </>
