@@ -294,7 +294,7 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts, isLoading = false })
 
   // month filter handlers
   function openMonthModal() { if (isEditingAnyExercise) return; setShowMonthPicker(true); }
-  function handleMonthsChange(arr) { setFilterMonths(arr || []); }
+  function handleMonthsChange(arr) { setFilterMonths(arr || []); setShowMonthPicker(false); }
   function removeMonthChip(ym) { setFilterMonths(prev => prev.filter(m => m !== ym)); }
 
   function toggleCalendarView() {
