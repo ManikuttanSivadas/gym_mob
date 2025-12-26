@@ -132,7 +132,7 @@ function SetEditModal({
   );
 }
 
-function SetInput({ onAddSet, sets, onRemoveSet, onEditSet }) {
+function SetInput({ onAddSet, sets, onRemoveSet, onEditSet, isEditingExercise = false }) {
   const [weight, setWeight] = useState("");
   const [reps, setReps] = useState("");
   function handleSubmit() {
@@ -182,7 +182,7 @@ function SetInput({ onAddSet, sets, onRemoveSet, onEditSet }) {
                 {onEditSet && (
                   <button
                     type="button"
-                    onClick={() => onEditSet(set, "active")}
+                    onClick={() => onEditSet(set, isEditingExercise ? "editing" : "active")}
                     style={{ 
                       padding: "4px 6px", 
                       border: "none",
@@ -783,6 +783,7 @@ function LogWorkoutTab({
                 sets={currentExerciseSets}
                 onRemoveSet={handleRemoveSet}
                 onEditSet={handleEditSet}
+                isEditingExercise={!!editingExercise}
               />
               <div style={{ marginTop: "16px", display: "flex", gap: "8px" }}>
                 <button
