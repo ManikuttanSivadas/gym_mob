@@ -185,7 +185,7 @@ function App() {
         clearInterval(timerIntervalRef.current);
       }
     };
-  }, [timerRunning, timerSeconds]);
+  }, [timerRunning]);
 
   // Stopwatch interval effect
   useEffect(() => {

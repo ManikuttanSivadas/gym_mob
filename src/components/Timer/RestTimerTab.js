@@ -27,6 +27,11 @@ function RestTimerTab({
   };
 
   const handleTouchEnd = (e) => {
+    // Don't handle swipe if the target is a button
+    if (e.target.closest('button')) {
+      return;
+    }
+
     const touchEnd = e.changedTouches[0].clientX;
     const distance = touchStart - touchEnd;
     const isLeftSwipe = distance > 50;
@@ -51,13 +56,19 @@ function RestTimerTab({
       <div className="timer-sub-nav">
         <button 
           className={timerSubTab === 0 ? "timer-sub-btn active" : "timer-sub-btn"} 
-          onClick={() => setTimerSubTab(0)}
+          onClick={(e) => {
+            e.stopPropagation();
+            setTimerSubTab(0);
+          }}
         >
           Rest Timer
         </button>
         <button 
           className={timerSubTab === 1 ? "timer-sub-btn active" : "timer-sub-btn"} 
-          onClick={() => setTimerSubTab(1)}
+          onClick={(e) => {
+            e.stopPropagation();
+            setTimerSubTab(1);
+          }}
         >
           Stopwatch
         </button>

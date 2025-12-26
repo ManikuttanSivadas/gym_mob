@@ -1,20 +1,27 @@
 .timer-indicator-bar {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
   background-color: var(--bg-secondary);
-  border-top: 2px solid var(--btn-primary);
-  padding: 12px 16px;
+  padding: 10px 20px;
   z-index: 999;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-radius: 25px;
+  max-width: 90%;
+  border: 1px solid rgba(37, 99, 235, 0.2);
+}
+
+.timer-indicator-bar:hover {
+  transform: translateX(-50%) translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
 }
 
 .timer-indicator-bar.swipeable {
   cursor: grab;
-  padding-top: 24px;
+  padding-top: 22px;
 }
 
 .timer-indicator-bar.swipeable:active {
@@ -23,17 +30,17 @@
 
 .timer-indicator-dots {
   position: absolute;
-  top: 8px;
+  top: 4px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  gap: 6px;
+  gap: 5px;
   align-items: center;
 }
 
 .timer-indicator-dots .dot {
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
   border-radius: 50%;
   background-color: var(--text-muted);
   transition: all 0.3s ease;
@@ -41,84 +48,78 @@
 
 .timer-indicator-dots .dot.active {
   background-color: var(--btn-primary);
-  width: 20px;
-  border-radius: 3px;
-}
-
-.timer-indicator-bar:hover {
-  background-color: var(--bg-tertiary, var(--bg-secondary));
-  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);
+  width: 12px;
+  border-radius: 2px;
 }
 
 .timer-indicator-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  max-width: 600px;
-  margin: 0 auto;
+  gap: 16px;
 }
 
 .timer-indicator-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   flex: 1;
 }
 
 .timer-indicator-badge {
   display: inline-block;
-  background-color: var(--btn-primary);
-  color: white;
-  padding: 4px 10px;
-  border-radius: 4px;
+  color: var(--btn-primary);
+  padding: 2px 8px;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  min-width: 50px;
+  letter-spacing: 0.3px;
+  min-width: 45px;
   text-align: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: transparent;
 }
 
 .timer-indicator-info {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 0;
 }
 
 .timer-indicator-time {
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 16px;
+  font-weight: 600;
   color: var(--text-primary);
-  font-family: 'Courier New', monospace;
-  letter-spacing: 1px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  letter-spacing: 0px;
 }
 
 .timer-indicator-buttons {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   align-items: center;
 }
 
 .timer-indicator-play-btn {
-  background-color: var(--btn-primary);
-  border: none;
-  border-radius: 6px;
-  padding: 8px 16px;
+  background-color: transparent;
+  border: 1.5px solid var(--btn-primary);
+  border-radius: 5px;
+  padding: 6px 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  color: white;
-  font-size: 13px;
-  font-weight: 600;
+  color: var(--btn-primary);
+  font-size: 12px;
+  font-weight: 500;
   flex-shrink: 0;
-  text-transform: capitalize;
 }
 
 .timer-indicator-play-btn:hover {
-  background-color: var(--btn-primary-hover);
+  background-color: var(--btn-primary);
+  color: white;
   transform: translateY(-1px);
 }
 
@@ -127,42 +128,45 @@
 }
 
 .timer-indicator-play-btn.playing {
-  background-color: var(--btn-success);
-  animation: pulse 1s infinite;
+  background-color: var(--btn-primary);
+  color: white;
 }
 
 .timer-indicator-play-btn.playing:hover {
-  background-color: var(--btn-success-hover);
+  background-color: var(--btn-primary-hover);
 }
 
 .timer-indicator-play-btn.paused {
-  background-color: var(--btn-secondary);
+  background-color: transparent;
+  border: 1.5px solid var(--btn-secondary);
+  color: var(--btn-secondary);
 }
 
 .timer-indicator-play-btn.paused:hover {
-  background-color: var(--btn-secondary-hover);
+  background-color: var(--btn-secondary);
+  color: white;
   transform: translateY(-1px);
 }
 
 .timer-indicator-reset-btn {
-  background-color: var(--btn-secondary);
-  border: none;
-  border-radius: 6px;
-  padding: 8px 16px;
+  background-color: transparent;
+  border: 1.5px solid var(--text-muted);
+  border-radius: 5px;
+  padding: 6px 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  color: white;
-  font-size: 13px;
-  font-weight: 600;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 500;
   flex-shrink: 0;
-  text-transform: capitalize;
 }
 
 .timer-indicator-reset-btn:hover {
-  background-color: var(--btn-secondary-hover);
+  background-color: var(--text-muted);
+  color: white;
   transform: translateY(-1px);
 }
 
@@ -170,42 +174,42 @@
   transform: scale(0.95);
 }
 
-@keyframes pulse {
-  0%, 100% {
-    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
-  }
-  50% {
-    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
-  }
-}
-
 /* Responsive */
 @media (max-width: 480px) {
   .timer-indicator-bar {
-    padding: 10px 12px;
+    bottom: 16px;
+    padding: 8px 16px;
+  }
+
+  .timer-indicator-bar.swipeable {
+    padding-top: 20px;
   }
 
   .timer-indicator-badge {
     font-size: 10px;
-    padding: 3px 8px;
-    min-width: 45px;
+    padding: 2px 6px;
+    min-width: 40px;
   }
 
   .timer-indicator-time {
-    font-size: 16px;
+    font-size: 15px;
   }
 
   .timer-indicator-play-btn,
   .timer-indicator-reset-btn {
-    padding: 6px 12px;
-    font-size: 12px;
+    padding: 5px 10px;
+    font-size: 11px;
   }
 
   .timer-indicator-left {
-    gap: 10px;
+    gap: 8px;
   }
 
   .timer-indicator-buttons {
-    gap: 6px;
+    gap: 5px;
+  }
+
+  .timer-indicator-content {
+    gap: 12px;
   }
 }

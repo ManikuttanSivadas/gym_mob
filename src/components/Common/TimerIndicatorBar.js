@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './TimerIndicatorBar.css';
 
 function TimerIndicatorBar({
@@ -62,19 +62,17 @@ function TimerIndicatorBar({
     const distance = touchStart - touchEnd;
     const isLeftSwipe = distance > 50;
     const isRightSwipe = distance < -50;
-    const bothRunning = isTimerActive && isStopwatchActive;
 
-    if (bothRunning) {
-      if (isLeftSwipe && timerSubTab === 0) {
-        setTimerSubTab(1);
-      }
-      if (isRightSwipe && timerSubTab === 1) {
-        setTimerSubTab(0);
-      }
+    if (isLeftSwipe && timerSubTab === 0) {
+      setTimerSubTab(1);
+    }
+    if (isRightSwipe && timerSubTab === 1) {
+      setTimerSubTab(0);
     }
   };
 
   const bothRunning = isTimerActive && isStopwatchActive;
+  const showSwipeDots = (timerSubTab === 0 && isStopwatchActive) || (timerSubTab === 1 && isTimerActive);
 
   return (
     <div 
@@ -83,7 +81,7 @@ function TimerIndicatorBar({
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      {bothRunning && (
+      {showSwipeDots && (
         <div className="timer-indicator-dots">
           <span className={`dot ${timerSubTab === 0 ? 'active' : ''}`}></span>
           <span className={`dot ${timerSubTab === 1 ? 'active' : ''}`}></span>
