@@ -84,6 +84,20 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts, isLoading = false })
     return oldest || getTodayMonth();
   }
 
+  function getAvailableMonths() {
+    const months = new Set();
+    if (workouts && workouts.length > 0) {
+      workouts.forEach(w => {
+        const ds = w.workoutDate || (w.date || "").split("T")[0];
+        if (ds) {
+          const ym = ds.slice(0,7);
+          months.add(ym);
+        }
+      });
+    }
+    return Array.from(months).sort();
+  }
+
   const filteredWorkouts = useMemo(() => {
     return (filterMonths && filterMonths.length > 0)
       ? workouts.filter(w => {
@@ -351,6 +365,7 @@ function ViewWorkoutsTab({ workouts = [], onUpdateWorkouts, isLoading = false })
           onClose={() => setShowMonthPicker(false)}
           min={getMinFilterMonth()}
           max={getTodayMonth()}
+          availableMonths={getAvailableMonths()}
         />
       )}
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import ReactDOM from "react-dom";
 
-function MonthPickerModal({ value = [], onChange, min, max, onClose }) {
+function MonthPickerModal({ value = [], onChange, min, max, onClose, availableMonths = [] }) {
   const today = new Date();
   const initialYear = (value && value.length > 0) ? Number(value[0].split("-")[0]) : today.getFullYear();
   const [year, setYear] = useState(initialYear);
@@ -41,6 +41,11 @@ function MonthPickerModal({ value = [], onChange, min, max, onClose }) {
     const idx = y * 12 + mIdx;
     if (minIndex !== null && idx < minIndex) return false;
     if (maxIndex !== null && idx > maxIndex) return false;
+    // Check if this month has actual records
+    if (availableMonths && availableMonths.length > 0) {
+      const ym = toYM(y, mIdx);
+      return availableMonths.includes(ym);
+    }
     return true;
   }
 
