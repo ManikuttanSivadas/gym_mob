@@ -20,32 +20,8 @@ function RestTimerTab({
   setStopwatchLaps,
   stopwatchIntervalRef
 }) {
-  const [touchStart, setTouchStart] = useState(0);
-
-  const handleTouchStart = (e) => {
-    setTouchStart(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchEnd = (e) => {
-    const touchEnd = e.changedTouches[0].clientX;
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > 50;
-    const isRightSwipe = distance < -50;
-
-    if (isLeftSwipe && timerSubTab === 0) {
-      setTimerSubTab(1); // Swipe left -> go to Stopwatch
-    }
-    if (isRightSwipe && timerSubTab === 1) {
-      setTimerSubTab(0); // Swipe right -> go to Rest Timer
-    }
-  };
-
   return (
-    <div 
-      className="tab-section"
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-    >
+    <div className="tab-section">
       <h2>Timer Tools</h2>
       
       <div className="timer-sub-nav">
