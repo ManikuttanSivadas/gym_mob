@@ -250,7 +250,7 @@ function WorkoutEditModal({
                   const newExercise = {
                     id: generateId(),
                     name: "",
-                    sets: [{ id: generateId(), weight: 0, reps: 0 }]
+                    sets: [{ id: generateId(), weight: "", reps: "" }]
                   };
                   const updated = {
                     ...editingWorkoutData,

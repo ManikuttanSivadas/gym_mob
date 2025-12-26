@@ -111,7 +111,11 @@ function ExerciseEditModal({
               ))}
               <button 
                 type="button"
-                onClick={() => editingExercise.exerciseId = null}
+                onClick={() => {
+                  editingExercise.exerciseId = null;
+                  setNewSetWeight("");
+                  setNewSetReps("");
+                }}
                 className="add-new-exercise-button"
               >
                 + Add New Exercise
@@ -150,22 +154,21 @@ function ExerciseEditModal({
               <div className="add-set-form-grid">
                 <div className="weight-input-wrapper">
                   <input 
-                    type="number" 
+                    type="text"
+                    inputMode="decimal"
                     placeholder="Weight" 
                     value={newSetWeight} 
                     onChange={e => setNewSetWeight(e.target.value)} 
-                    min={0} 
-                    step={0.5} 
                     className="add-set-input"
                   />
                 </div>
                 <div className="reps-input-wrapper">
                   <input 
-                    type="number" 
+                    type="text"
+                    inputMode="numeric"
                     placeholder="Reps" 
                     value={newSetReps} 
                     onChange={e => setNewSetReps(e.target.value)} 
-                    min={1} 
                     className="add-set-input"
                   />
                 </div>
