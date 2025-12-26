@@ -49,10 +49,7 @@ function MonthPickerModal({ value = [], onChange, min, max, onClose }) {
   function toggleMonth(mIdx) {
     if (!isAllowed(year, mIdx)) return;
     const ym = toYM(year, mIdx);
-    const s = new Set(value || []);
-    if (s.has(ym)) s.delete(ym); else s.add(ym);
-    const arr = Array.from(s).sort((a,b) => (parseYMIndex(a)||0) - (parseYMIndex(b)||0));
-    onChange && onChange(arr);
+    onChange && onChange([ym]);
   }
 
   return ReactDOM.createPortal(
