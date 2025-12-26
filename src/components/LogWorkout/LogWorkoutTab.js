@@ -253,6 +253,10 @@ function LogWorkoutTab({
   const [exerciseToDelete, setExerciseToDelete] = useState(null);
 
   const [selectedDate, setSelectedDate] = useState(() => {
+    const savedDate = localStorage.getItem("logWorkoutSelectedDate");
+    if (savedDate) {
+      return savedDate;
+    }
     const today = new Date();
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, "0");
@@ -272,6 +276,11 @@ function LogWorkoutTab({
   useEffect(() => {
     localStorage.setItem("logWorkoutStep", currentStep.toString());
   }, [currentStep]);
+
+  // Save selected date to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("logWorkoutSelectedDate", selectedDate);
+  }, [selectedDate]);
 
   function getMinDate() {
     const oneYearAgo = new Date();
