@@ -131,6 +131,12 @@ function RestTimer({ seconds, setSeconds, running, setRunning, inputDigits, setI
         } catch (e) {}
       }
       
+      // Clear any existing vibration interval before starting a new one
+      if (vibrationIntervalRef.current) {
+        clearInterval(vibrationIntervalRef.current);
+        vibrationIntervalRef.current = null;
+      }
+      
       // Start continuous vibration
       if (navigator.vibrate) {
         vibrationIntervalRef.current = setInterval(() => {
@@ -138,6 +144,11 @@ function RestTimer({ seconds, setSeconds, running, setRunning, inputDigits, setI
         }, 700);
       }
     }
+    
+    // Cleanup vibration on unmount or when effect changes
+    return () => {
+      // Don't clean up here since we only want to clear on modal close
+    };
   }, [seconds, running, setRunning, setShowTimerEndedModal, vibrationIntervalRef]);
 
   // Handle OK button click - stops vibration and closes modal

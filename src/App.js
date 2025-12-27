@@ -224,6 +224,12 @@ function App() {
         } catch (e) {}
       }
       
+      // Clear any existing vibration interval before starting a new one
+      if (vibrationIntervalRef.current) {
+        clearInterval(vibrationIntervalRef.current);
+        vibrationIntervalRef.current = null;
+      }
+      
       // Start continuous vibration
       if (navigator.vibrate) {
         vibrationIntervalRef.current = setInterval(() => {
@@ -231,7 +237,12 @@ function App() {
         }, 700);
       }
     }
-  }, [timerSeconds, timerRunning, setTimerRunning]);
+    
+    // Cleanup vibration if timer is reset or component unmounts
+    return () => {
+      // Don't clear here as it will stop vibration when timerRunning becomes false
+    };
+  }, [timerSeconds, timerRunning, setTimerRunning, setShowTimerEndedModal];
 
   // Stopwatch interval effect
   useEffect(() => {
