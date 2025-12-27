@@ -242,7 +242,7 @@ function App() {
     return () => {
       // Don't clear here as it will stop vibration when timerRunning becomes false
     };
-  }, [timerSeconds, timerRunning, setTimerRunning, setShowTimerEndedModal];
+  }, [timerSeconds, timerRunning, setTimerRunning, setShowTimerEndedModal]);
 
   // Stopwatch interval effect
   useEffect(() => {
